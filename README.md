@@ -1,5 +1,5 @@
 # sysgeep
-System Git Keeping, to keep record and reproduce easily your system and user configuration.
+System Git Keeping, to keep record of and deploy easily your system and user configuration.
 
 For the moment, only Linux systems are supported.
 There is no plan to support Windows, although it could change in the future.
