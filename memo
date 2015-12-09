@@ -1,0 +1,8 @@
+- Config file (wrote at setup) in user's $HOME
+  -> "sysgeep setup myrepo" called as normal user. If called as root, must choose/ask wether use global /etc config or /root config.
+  -> but a /root or /etc config file would require to be sudo included each time doing "sysgeep save" too.
+
+
+- When executed, even with sudo, will use user's $HOME config file if exists, else the /etc/ config, else error.
+
+- Will require sudo or admin permissions when trying to do "restore".
