@@ -16,17 +16,6 @@ static void usage(void)
    fprintf(stderr, "\tsysgeep [-s] restore <path-to-file>\n");
 }
 
-static unsigned int args_missing(unsigned int argc_remaining, unsigned int nb_missing)
-{
-   if (argc_remaining < nb_missing)
-   {
-      fprintf(stderr, "Error: you need %d more argument(s).\n", nb_missing);
-      usage();
-      return 1;
-   }
-   return 0;
-}
-
 int main(unsigned int argc, char ** argv)
 {
    int c;
@@ -73,7 +62,7 @@ int main(unsigned int argc, char ** argv)
          usage();
          return 1;
       }
-      return sysgeep_setup(argv[optind + 1]);
+      return sysgeep_setup(argv[optind + 1], sflag);
    }
    else if (!strcmp("save", argv[optind]))
    {
@@ -83,7 +72,7 @@ int main(unsigned int argc, char ** argv)
          usage();
          return 1;
       }
-      return sysgeep_save(argv[optind + 1]);
+      return sysgeep_save(argv[optind + 1], sflag);
    }
    else if (!strcmp("restore", argv[optind]))
    {
@@ -93,7 +82,7 @@ int main(unsigned int argc, char ** argv)
          usage();
          return 1;
       }
-      return sysgeep_restore(argv[optind + 1]);
+      return sysgeep_restore(argv[optind + 1], sflag);
    }
    else
    {
