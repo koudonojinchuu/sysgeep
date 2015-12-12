@@ -3,17 +3,19 @@
 #include <stdio.h>  // printf, fprintf
 #include <unistd.h> // getopts
 #include <stdlib.h> // abort
+#include <error.h>  // error()
+#include <string.h> // strcmp()
 #define VERSION "20151209"
 
 static void usage(void)                                                                               
 {  
-   fprintf(stderr, "sysgeep - Keep System Config in Git, version "VERSION"\n");
-   fprintf(stderr, "Usage:\n");
-   fprintf(stderr, "\tsysgeep help\n");
-   fprintf(stderr, "\tsysgeep -h\n");
-   fprintf(stderr, "\tsysgeep [-s] setup <path-to-local-git-repository>\n");
-   fprintf(stderr, "\tsysgeep [-s] save <path-to-file>\n");
-   fprintf(stderr, "\tsysgeep [-s] restore <path-to-file>\n");
+   fprintf(stderr, "sysgeep - Keep System Config in Git, version "VERSION"\n"
+                   "Usage:\n"
+                        "\tsysgeep help\n"
+                        "\tsysgeep -h\n"
+                        "\tsysgeep [-s] setup <path-to-local-git-repository>\n"
+                        "\tsysgeep [-s] save <path-to-file>\n"
+                        "\tsysgeep [-s] restore <path-to-file>\n");
 }
 
 int main(unsigned int argc, char ** argv)
@@ -33,8 +35,7 @@ int main(unsigned int argc, char ** argv)
             sflag = 1;
             break;
          case '?':
-            fprintf (stderr, "Error: unknown option `-%c'.\n", optopt);
-            return 1;
+            fprintf(stderr, "Error: unknown option `-%c'.\n", optopt);
          default:
             abort ();
       }
