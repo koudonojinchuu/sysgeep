@@ -56,7 +56,7 @@ FILE * config_file(int sflag, char rw)
          if (sflag)
             if (access("/etc", W_OK))
                error(1, 1, "Error: cannot write in /etc");
-         return fopen(config_file_path, "w");
+         return fopen(config_file_path, "w+");
       default :
          abort();
    }
