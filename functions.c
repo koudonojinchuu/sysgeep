@@ -8,7 +8,7 @@
 #define USER_CONFIG_FILE "sysgeep.conf"
 #define USER_CONFIG_DIR ".config/sysgeep/"
 #define USER_CONFIG_LOCATION USER_CONFIG_DIR USER_CONFIG_FILE
-#define ROOT_CONFIG_LOCATION "/etc/sysgeep/sysgeep.conf"
+#define ROOT_CONFIG_LOCATION "/etc/sysgeep.conf"
 
 //if option -s, use /etc/sysgeep.conf
 //else, use $HOME/.conf/sysgeep/sysgeep.conf
