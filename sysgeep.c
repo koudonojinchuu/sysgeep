@@ -1,8 +1,8 @@
 // Sysgeep, Samuel Amo 2015. GPLv3.
 
-#include <stdio.h>  // printf, fprintf
-#include <unistd.h> // getopts
-#include <stdlib.h> // abort
+#include <stdio.h>  // printf(), fprintf()
+#include <unistd.h> // getopts()
+#include <stdlib.h> // abort()
 #include <error.h>  // error()
 #include <string.h> // strcmp()
 #define VERSION "20151209"
