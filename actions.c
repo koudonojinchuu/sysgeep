@@ -118,18 +118,25 @@ void recurs_make_dirs(char * dir_path)
    umask(old_mask);
 }
 
-// XXX
+// save a given system file into the sysgeep repo
 int sysgeep_save(char * file_path, int sflag)
 {
    char * git_repo_path = get_git_repo(sflag);
 
    // get absolute path of "file_path"
    char * abs_path = realpath(file_path, NULL);
+   if (!abs_path)
+      error(1, 1, "Error: could not find the real path of: %s", file_path);
 
    // make it a path inside the git repo
    char * in_git_path = malloc(sizeof(char)*(strlen(abs_path) + strlen(git_repo_path)));
    sprintf(in_git_path, "%s%s", git_repo_path, abs_path);
-   free(abs_path);
+
+   // remove any '/' at the begining to pass it as a relative path later
+   int i = 0;
+   unsigned int pathlen = strlen(abs_path);
+   while ( (i < pathlen) && (abs_path[i] == '/') ) ++i;
+   char * path_rel = abs_path + i;
 
    // check and create all the parent directories of "file_path" inside git repo
    char * arg_dirname = strdup(in_git_path);
@@ -141,35 +148,79 @@ int sysgeep_save(char * file_path, int sflag)
    FILE * file_to_write = fopen(in_git_path, "w+");
    FILE * src = fopen(file_path, "r");
    char c;
-   while( (c = fgetc(src)) != EOF ) fputc(c, target); 
+   while( (c = fgetc(src)) != EOF ) fputc(c, file_to_write); 
    fclose(src);
    fclose(file_to_write);
 
    git_threads_init();
 
-   // be sure the given path will be relative: no '/' at the begining
-   int i = 0;
-   while ( (i < pathlen) && (file_path[i] == '/') ) ++i;
-   char * file_path_rel = file_path + i;
+
+   printf("absolutized path: %s\n", path_rel);
 
    // add the file to the index
    git_repository * repo = NULL;
-   if (git_repository_open_ext(&repo, git_repo_path))
+   if (git_repository_open(&repo, git_repo_path))
       error(1, 1, "Error: could not open git repository: %s", git_repo_path);
    git_index * idx = NULL;
    if (git_repository_index(&idx, repo))
       error(1, 1, "Error: could not open index of repository: %s", git_repo_path);
-   if (git_index_add_bypath(idx, file_path))
+   if (git_index_add_bypath(idx, path_rel))
+      error(1, 1, "Error: could not add object to the index");
+   if (git_index_write(idx))
+      error(1, 1, "Error: could not write index to disk");
 
    // take note of the permissions and owner:group
    // keep them on a line in a lexicographic ordered file at root of the git repo
+   // OR store permissions and owner:group in the commit message
    // TODO
-   
+
    // commit with the file name as message
-   // TODO
+   git_config * gitconfig = NULL;
+   if (git_config_open_default(&gitconfig))
+      error(1, 1, "Error: could not open git configuration");
+   git_config_entry * entry_name;
+   if (git_config_get_entry((const git_config_entry **) &entry_name, gitconfig, "user.name"))
+      error(1, 1, "Error: could not get user.name entry");
+   git_config_entry * entry_email;
+   if (git_config_get_entry((const git_config_entry **) &entry_email, gitconfig, "user.email"))
+      error(1, 1, "Error: could not get user.email entry");
+   git_signature * me = NULL;
+   if (git_signature_now(&me, entry_name->value, entry_email->value))
+      error(1, 1, "Error: could not create commit signature");
+   //git_config_entry_free(entry_name); //API not yet available in libgit2 v2.21?
+   //git_config_entry_free(entry_email); //API not yet available in libgit2 v2.21?
+   git_config_free(gitconfig);
 
-   printf("%s\n", git_repo_path);
+   git_commit * parents;
+   unsigned int nb_parents = 0;
+   if (!git_repository_head_unborn(repo))
+   {
+      git_oid head_oid;
+      if (git_reference_name_to_id(&head_oid, repo, "HEAD"))
+         error(1, 1, "Error: could not get HEAD oid");
+      //git_commit * parent_commit;
+      if (git_commit_lookup(&parents, repo, &head_oid))
+         error(1, 1, "Error: could not get HEAD commit");
+      //parents[0] = parent_commit;
+      nb_parents = 1;
+   }
 
+   git_tree * tree;
+   git_oid tree_id;
+   if (git_index_write_tree(&tree_id, idx))
+      error(1, 1, "Error: could not get tree id");
+   if (git_tree_lookup(&tree, repo, &tree_id))
+      error(1, 1, "Error: could not get tree");
+
+   git_oid new_commit_id;
+   if (git_commit_create(&new_commit_id, repo, "HEAD", me, me, "UTF-8", file_path, tree, nb_parents, (const git_commit **) &parents))
+      error(1, 1, "Error: could not create the commit");
+
+   // free all the remaining
+   git_signature_free(me);
+   git_commit_free(parents);
+   git_tree_free(tree);
+   free(abs_path);
    free(in_git_path);
    git_index_free(idx);
    git_repository_free(repo);
@@ -178,7 +229,7 @@ int sysgeep_save(char * file_path, int sflag)
    return 0;
 }
 
-// XXX
+// restore a file, copying it from the sysgeep repo to the host system
 int sysgeep_restore(char * file_path, int sflag)
 {
    int ret = 0;

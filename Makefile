@@ -1,4 +1,4 @@
 LDFLAGS=-lgit2
 CFLAGS=-g
 
-sysgeep: sysgeep.o functions.o
+sysgeep: sysgeep.o actions.o

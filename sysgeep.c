@@ -5,6 +5,9 @@
 #include <stdlib.h> // abort()
 #include <error.h>  // error()
 #include <string.h> // strcmp()
+
+#include "actions.h"
+
 #define VERSION "20151209"
 
 static void usage(void)                                                                               
