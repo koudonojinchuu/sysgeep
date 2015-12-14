@@ -1,3 +1,6 @@
+To fill some voids in my understanding of git internals, I started reading Scott Chacon's "Git Internals". By doing this,
+I've discovered that Gibak does the same, too late. But I decided not to look at it, so that I can keep a chance to have original ideas, at least until the very first release.
+
 - Config file (wrote at setup) in user's $HOME or in /etc (with -s option)
 
 - When executed, without -s, will use user's $HOME config file.
