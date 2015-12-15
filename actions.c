@@ -15,7 +15,7 @@
 // uid_t and gid_t are 32bits unsigned integers, so their max is 4294967296 (10 digits)
 #define UIDT_MAXLEN 10
 #define GIDT_MAXLEN 10
-#define PERM_LEN 4
+#define PERM_LEN 6
 
 //if option -s, use /etc/sysgeep.conf
 //else, use $HOME/.conf/sysgeep/sysgeep.conf
@@ -159,9 +159,6 @@ int sysgeep_save(char * file_path, int sflag)
 
    git_threads_init();
 
-
-   printf("absolutized path: %s\n", path_rel);
-
    // add the file to the index
    git_repository * repo = NULL;
    if (git_repository_open(&repo, git_repo_path))
@@ -179,14 +176,14 @@ int sysgeep_save(char * file_path, int sflag)
    // OR store permissions and owner:group in the commit message
    // TODO
 
-   // get file attributes
+   // get file attributes and build line to put into the sysgeep index
    struct stat s;
    if (stat(file_path, &s))
       error(1, 1, "Error: could not stat() the file to be saved");
-   char * attributes_buffer = malloc(sizeof(char)*(UIDT_MAXLEN + GIDT_MAXLEN + 2 + PERM_LEN));
-   sprintf(attributes_buffer, "%d:%d %o", s.st_uid, s.st_gid, s.st_mode);
+   char * attributes_buffer = malloc(sizeof(char)*(strlen(abs_path) + UIDT_MAXLEN + GIDT_MAXLEN + 3 + PERM_LEN));
+   sprintf(attributes_buffer, "%s %d:%d %o", abs_path, s.st_uid, s.st_gid, s.st_mode);
 
-   printf("attributes: %s\n", attributes_buffer);
+   printf("sysgeep index line: %s\n", attributes_buffer);
 
    // commit with the file name as message
    git_config * gitconfig = NULL;
