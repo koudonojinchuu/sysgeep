@@ -35,6 +35,20 @@ static char ** counted_file_to_lines_array(char * file_path)
    return lines;
 }
 
+//XXX
+// to write down a lines array into a "counted file"
+static void lines_array_to_counted_file(char ** lines, counted_file_path)
+{
+   int len = sizeof(lines) / sizeof(char *);
+   FILE * fd = fopen(counted_file_path, "w+");
+   
+   char * count_str;//TODO TODO
+
+   fwrite(); //TODO
+
+   close(counted_file_path);
+}
+
 static void free_lines_array(char ** lines_array)
 {
    int i;
@@ -109,6 +123,7 @@ static int index_of_closest_predecessor(char ** lines_array, char * str_to_looku
    return helper__index_of_closest_predecessor(lines_array, str_to_lookup, 0, len - 1);
 }
 
+//XXX
 void add_sorted_line(char * sysgeep_index_path, char * attributes_buffer)
 {
    // load all lines into an array
@@ -118,12 +133,23 @@ void add_sorted_line(char * sysgeep_index_path, char * attributes_buffer)
    int pred_index = index_of_closest_predecessor(lines, attributes_buffer);
 
    // insert
+   char ** new_array = malloc(sizeof(char *)*(len + 1));
+   int i;
+   for (i=0; i<=pred_index; i++) new_array[i] = lines[i];
+   new_array[1+pred_index] = attributes_buffer;
+   for (i=pred_index+2; i<len+1; i++) new_array[i] = lines[i-1];
 
    // write back to a new file on disk
+   lines_array_to_counted_file(lines, new_index_path); //TODO
+
+   // free array
+   free_lines_array(lines);
 
    // swap new and old files
+   //TODO
 
    // delete old file
+   //TODO
    printf("sysgeep index line: %s\n", attributes_buffer);
 }
 
