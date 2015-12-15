@@ -22,7 +22,7 @@
 
 //if option -s, use /etc/sysgeep.conf
 //else, use $HOME/.conf/sysgeep/sysgeep.conf
-FILE * config_file(int sflag, char rw)
+static FILE * config_file(int sflag, char rw)
 {
    char * config_file_path;
    struct stat s;
@@ -94,7 +94,7 @@ int sysgeep_setup(char * local_git_repo_path, int sflag)
    return 0;
 }
 
-char * get_git_repo(int sflag)
+static char * get_git_repo(int sflag)
 {
    char * git_repo = NULL;
    size_t n = 0;
@@ -105,7 +105,7 @@ char * get_git_repo(int sflag)
 }
 
 // make (recursively with its parents) a directory if it does not exist yet
-void recurs_make_dirs(char * dir_path)
+static void recurs_make_dirs(char * dir_path)
 {
    // if dir exist, exit
    struct stat s;
@@ -124,7 +124,7 @@ void recurs_make_dirs(char * dir_path)
 
 // add file to the sysgeep index
 // the argument must be the absolute path
-void add_to_index(char * git_repo_path, char * abs_path)
+static void add_to_index(char * git_repo_path, char * abs_path)
 {
    // path of the sysgeep index
    char * sysgeep_index_path = malloc(sizeof(char)*(strlen(git_repo_path) + strlen("/.sysgeep_index") + 1));
