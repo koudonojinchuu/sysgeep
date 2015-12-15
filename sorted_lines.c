@@ -1,6 +1,7 @@
-#include <stdio.h> // printf()
-#include <stdlib.h>// abort(), realloc()
-#include <string.h>// strlen()
+#include <stdio.h>  // printf()
+#include <stdlib.h> // abort(), realloc()
+#include <string.h> // strlen()
+#include <unistd.h> // unlink()
 
 #include "utils.h"
 
@@ -36,14 +37,14 @@ static char ** counted_file_to_lines_array(char * file_path)
 }
 
 // to write down a lines array into a "counted file"
-static void lines_array_to_counted_file(char ** lines, counted_file_path)
+static void lines_array_to_counted_file(char ** lines, char * counted_file_path)
 {
    int len = sizeof(lines) / sizeof(char *);
    FILE * fd = fopen(counted_file_path, "w+");
    fprintf(fd, "%d\n", len);
    int i;
    for (i=0; i<len; i++) fprintf(fd, "%s\n", lines[i]);
-   close(fd);
+   fclose(fd);
 }
 
 static void free_lines_array(char ** lines_array)
@@ -95,7 +96,7 @@ static int comparison_function(char * line1, char * line2)
    return 0;
 }
 
-static int helper__index_of_closest_predecessor(char ** lines_array, char * str_to_lookup, bool * found, int beg, int end)
+static int helper__index_of_closest_predecessor(char ** lines_array, char * str_to_lookup, int * found, int beg, int end)
 {
    if (beg > end) return -1;
    int mid = (end + beg) / 2;
@@ -125,7 +126,7 @@ static int helper__index_of_closest_predecessor(char ** lines_array, char * str_
 // If some line has exactly that name, will return its index.
 // Else, return the line that comes just before it (its lower bound).
 // If there are no lines in the array, return -1
-static int index_of_closest_predecessor(char ** lines_array, char * str_to_lookup, bool * found)
+static int index_of_closest_predecessor(char ** lines_array, char * str_to_lookup, int * found)
 {
    int len = sizeof(lines_array) / sizeof(char *);
    if (!len) return -1;
@@ -137,9 +138,10 @@ void add_sorted_line(char * sysgeep_index_path, char * attributes_buffer)
 {
    // load all lines into an array
    char ** lines = counted_file_to_lines_array(sysgeep_index_path);
+   int len = sizeof(lines) / sizeof(char *);
 
    // search for the index where to insert
-   bool found = 0;
+   int found = 0;
    int pred_index = index_of_closest_predecessor(lines, attributes_buffer, &found);
 
    // insert (or replace if found==1)
@@ -147,7 +149,7 @@ void add_sorted_line(char * sysgeep_index_path, char * attributes_buffer)
    int i;
    for (i=0; i<=pred_index; i++) new_array[i] = lines[i];
    new_array[1+pred_index] = attributes_buffer;
-   for (i=pred_index+2+(int)found; i<len+1; i++) new_array[i] = lines[i-1];
+   for (i=pred_index+2+found; i<len+1; i++) new_array[i] = lines[i-1];
 
    // write back to a new file on disk
    char * new_index_path = malloc(sizeof(char)*(strlen(sysgeep_index_path) + 1 + 4));
