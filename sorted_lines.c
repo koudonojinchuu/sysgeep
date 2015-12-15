@@ -132,7 +132,7 @@ static int index_of_closest_predecessor(char ** lines_array, char * str_to_looku
    return helper__index_of_closest_predecessor(lines_array, str_to_lookup, found, 0, len - 1);
 }
 
-//XXX
+// add a line in the sorted index, or replace the line if the same key preexisted
 void add_sorted_line(char * sysgeep_index_path, char * attributes_buffer)
 {
    // load all lines into an array
@@ -141,14 +141,13 @@ void add_sorted_line(char * sysgeep_index_path, char * attributes_buffer)
    // search for the index where to insert
    bool found = 0;
    int pred_index = index_of_closest_predecessor(lines, attributes_buffer, &found);
-   //TODO: if the line already exists, replace it.
 
-   // insert
+   // insert (or replace if found==1)
    char ** new_array = malloc(sizeof(char *)*(len + 1));
    int i;
    for (i=0; i<=pred_index; i++) new_array[i] = lines[i];
    new_array[1+pred_index] = attributes_buffer;
-   for (i=pred_index+2; i<len+1; i++) new_array[i] = lines[i-1];
+   for (i=pred_index+2+(int)found; i<len+1; i++) new_array[i] = lines[i-1];
 
    // write back to a new file on disk
    char * new_index_path = malloc(sizeof(char)*(strlen(sysgeep_index_path) + 1 + 4));
