@@ -12,6 +12,11 @@
 #define USER_CONFIG_LOCATION USER_CONFIG_DIR USER_CONFIG_FILE
 #define ROOT_CONFIG_LOCATION "/etc/sysgeep.conf"
 
+// uid_t and gid_t are 32bits unsigned integers, so their max is 4294967296 (10 digits)
+#define UIDT_MAXLEN 10
+#define GIDT_MAXLEN 10
+#define PERM_LEN 4
+
 //if option -s, use /etc/sysgeep.conf
 //else, use $HOME/.conf/sysgeep/sysgeep.conf
 FILE * config_file(int sflag, char rw)
@@ -175,8 +180,13 @@ int sysgeep_save(char * file_path, int sflag)
    // TODO
 
    // get file attributes
-   // pemissions:
+   struct stat s;
+   if (stat(file_path, &s))
+      error(1, 1, "Error: could not stat() the file to be saved");
+   char * attributes_buffer = malloc(sizeof(char)*(UIDT_MAXLEN + GIDT_MAXLEN + 2 + PERM_LEN));
+   sprintf(attributes_buffer, "%d:%d %o", s.st_uid, s.st_gid, s.st_mode);
 
+   printf("attributes: %s\n", attributes_buffer);
 
    // commit with the file name as message
    git_config * gitconfig = NULL;
@@ -219,6 +229,7 @@ int sysgeep_save(char * file_path, int sflag)
       error(1, 1, "Error: could not create the commit");
 
    // free all the remaining
+   free(attributes_buffer);
    git_signature_free(me);
    git_commit_free(parents);
    git_tree_free(tree);
