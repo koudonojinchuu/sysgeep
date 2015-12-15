@@ -7,12 +7,14 @@
 #include <libgen.h> // dirname(), basename()
 #include <git2.h>   // use git without system() calls
 
+#include "sorted_lines.h"
+
 #define USER_CONFIG_FILE "sysgeep.conf"
 #define USER_CONFIG_DIR ".config/sysgeep/"
 #define USER_CONFIG_LOCATION USER_CONFIG_DIR USER_CONFIG_FILE
 #define ROOT_CONFIG_LOCATION "/etc/sysgeep.conf"
 
-// uid_t and gid_t are 32bits unsigned integers, so their max is 4294967296 (10 digits)
+// uid_t and gid_t are 32bits uint, so their max is 10 digits
 #define UIDT_MAXLEN 10
 #define GIDT_MAXLEN 10
 #define PERM_LEN 6
@@ -123,6 +125,28 @@ void recurs_make_dirs(char * dir_path)
    umask(old_mask);
 }
 
+// add file to the sysgeep index
+// the argument must be the absolute path
+void add_to_index(char * git_repo_path, char * abs_path)
+{
+   // path of the sysgeep index
+   char * sysgeep_index_path = malloc(sizeof(char)*(strlen(git_repo_path) + 1 + strlen(".sysgeep_index")));
+   sprintf("%s/.sysgeep_index", git_repo_path);
+
+   // get file attributes and build line to put into the sysgeep index
+   struct stat s;
+   if (stat(abs_path, &s))
+      error(1, 1, "Error: could not stat() the file to be saved");
+   char * attributes_buffer = malloc(sizeof(char)*(strlen(abs_path) + UIDT_MAXLEN + GIDT_MAXLEN + 3 + PERM_LEN));
+   sprintf(attributes_buffer, "%s %d:%d %o", abs_path, s.st_uid, s.st_gid, s.st_mode);
+
+   // add the line to the sysgeep index
+   add_sorted_line(sysgeep_index_path, attributes_buffer);
+
+   free(attributes_buffer);
+   free(sysgeep_index_path);
+}
+
 // save a given system file into the sysgeep repo
 int sysgeep_save(char * file_path, int sflag)
 {
@@ -173,17 +197,7 @@ int sysgeep_save(char * file_path, int sflag)
 
    // take note of the permissions and owner:group
    // keep them on a line in a lexicographic ordered file at root of the git repo
-   // OR store permissions and owner:group in the commit message
-   // TODO
-
-   // get file attributes and build line to put into the sysgeep index
-   struct stat s;
-   if (stat(file_path, &s))
-      error(1, 1, "Error: could not stat() the file to be saved");
-   char * attributes_buffer = malloc(sizeof(char)*(strlen(abs_path) + UIDT_MAXLEN + GIDT_MAXLEN + 3 + PERM_LEN));
-   sprintf(attributes_buffer, "%s %d:%d %o", abs_path, s.st_uid, s.st_gid, s.st_mode);
-
-   printf("sysgeep index line: %s\n", attributes_buffer);
+   add_to_index(git_repo_path, abs_path);
 
    // commit with the file name as message
    git_config * gitconfig = NULL;
@@ -226,7 +240,6 @@ int sysgeep_save(char * file_path, int sflag)
       error(1, 1, "Error: could not create the commit");
 
    // free all the remaining
-   free(attributes_buffer);
    git_signature_free(me);
    git_commit_free(parents);
    git_tree_free(tree);
