@@ -7,6 +7,7 @@
 #include <libgen.h> // dirname(), basename()
 #include <git2.h>   // use git without system() calls
 
+#include "utils.h"
 #include "sorted_lines.h"
 
 #define USER_CONFIG_FILE "sysgeep.conf"
@@ -33,11 +34,11 @@ FILE * config_file(int sflag, char rw)
    else
    {
       char * homedir = getenv ("HOME");
-      if (homedir == NULL)
-         error(1, 1, "Error: HOME variable is not set.\n"
-               "try -s option to use system wide "ROOT_CONFIG_LOCATION);
+      chk( (homedir == NULL),
+               "Error: HOME variable is not set.\n"
+               "try -s option to use system wide "ROOT_CONFIG_LOCATION"\n" );
 
-      config_file_path = malloc(sizeof(char)*(strlen(USER_CONFIG_LOCATION) + strlen(homedir) + 1));
+      config_file_path = malloc(sizeof(char)*(strlen(USER_CONFIG_LOCATION) + strlen(homedir) + 2));
       sprintf(config_file_path, "%s/"USER_CONFIG_LOCATION, homedir);
 
       // create directories if missing
@@ -46,13 +47,11 @@ FILE * config_file(int sflag, char rw)
       sprintf(directory_to_check, "%s/.config", homedir);
 
       if (!(stat(directory_to_check, &s) == 0 && S_ISDIR(s.st_mode)))
-         if (mkdir(directory_to_check, 0700))
-            error(1, 1, "Error: could not create %s/.config directory", homedir);
+         chk( mkdir(directory_to_check, 0700), "Error: could not create %s/.config directory\n", homedir );
       sprintf(directory_to_check, "%s/.config/sysgeep", homedir);
 
       if (!(stat(directory_to_check, &s) == 0 && S_ISDIR(s.st_mode)))
-         if (mkdir(directory_to_check, 0700))
-            error(1, 1, "Error: could not create %s/.config/sysgeep directory", homedir);
+         chk( mkdir(directory_to_check, 0700), "Error: could not create %s/.config/sysgeep directory\n", homedir );
       umask(old_mask);
 
       free(directory_to_check);
@@ -62,15 +61,13 @@ FILE * config_file(int sflag, char rw)
    switch (rw)
    {
       case 'r' :
-         if (access(config_file_path, R_OK))
-            error(1, 1, "Error: cannot read in %s", config_file_path);
+         chk( access(config_file_path, R_OK), "Error: cannot read in %s\n", config_file_path );
          config_file_path_fd = fopen(config_file_path, "r");
          break;
       case 'w' :
          // if needed,check wether we have write permission in /etc
          if (sflag)
-            if (access("/etc", W_OK))
-               error(1, 1, "Error: cannot write in /etc");
+            chk( access("/etc", W_OK), "Error: cannot write in /etc\n" );
          config_file_path_fd = fopen(config_file_path, "w+");
          break;
       default :
@@ -83,11 +80,11 @@ FILE * config_file(int sflag, char rw)
 int sysgeep_setup(char * local_git_repo_path, int sflag)
 {
    // check if local_git_repo_path is a git repo
-   char * git_repo_check = malloc(sizeof(char)*(strlen(local_git_repo_path) + strlen("/.git")));
+   char * git_repo_check = malloc(sizeof(char)*(strlen(local_git_repo_path) + strlen("/.git") + 1));
    sprintf(git_repo_check, "%s/.git", local_git_repo_path);
    struct stat s;
-   if (!(stat(git_repo_check, &s) == 0 && S_ISDIR(s.st_mode)))
-      error(1, 1, "Error: %s is not a git repository", local_git_repo_path);
+   chk( !(stat(git_repo_check, &s) == 0 && S_ISDIR(s.st_mode)),
+      "Error: %s is not a git repository\n", local_git_repo_path );
    free(git_repo_check);
 
    // copy the git repo name into the config file
@@ -120,8 +117,8 @@ void recurs_make_dirs(char * dir_path)
    free(arg_dirname);
    // make the (child) directory
    mode_t old_mask = umask(0);
-   if (mkdir(dir_path, 0700))
-      error(1, 1, "Error: could not create directory %s", dir_path);
+   chk( mkdir(dir_path, 0700),
+      "Error: could not create directory %s\n", dir_path );
    umask(old_mask);
 }
 
@@ -130,14 +127,13 @@ void recurs_make_dirs(char * dir_path)
 void add_to_index(char * git_repo_path, char * abs_path)
 {
    // path of the sysgeep index
-   char * sysgeep_index_path = malloc(sizeof(char)*(strlen(git_repo_path) + 1 + strlen(".sysgeep_index")));
-   sprintf("%s/.sysgeep_index", git_repo_path);
+   char * sysgeep_index_path = malloc(sizeof(char)*(strlen(git_repo_path) + strlen("/.sysgeep_index") + 1));
+   sprintf(sysgeep_index_path, "%s/.sysgeep_index", git_repo_path);
 
    // get file attributes and build line to put into the sysgeep index
    struct stat s;
-   if (stat(abs_path, &s))
-      error(1, 1, "Error: could not stat() the file to be saved");
-   char * attributes_buffer = malloc(sizeof(char)*(strlen(abs_path) + UIDT_MAXLEN + GIDT_MAXLEN + 3 + PERM_LEN));
+   chk( stat(abs_path, &s), "Error: could not stat() the file to be saved\n" );
+   char * attributes_buffer = malloc(sizeof(char)*(strlen(abs_path) + UIDT_MAXLEN + GIDT_MAXLEN + PERM_LEN + 4));
    sprintf(attributes_buffer, "%s %d:%d %o", abs_path, s.st_uid, s.st_gid, s.st_mode);
 
    // add the line to the sysgeep index
@@ -154,11 +150,10 @@ int sysgeep_save(char * file_path, int sflag)
 
    // get absolute path of "file_path"
    char * abs_path = realpath(file_path, NULL);
-   if (!abs_path)
-      error(1, 1, "Error: could not find the real path of: %s", file_path);
+   pchk_t( abs_path, "Error: could not find the real path of: %s\n", file_path );
 
    // make it a path inside the git repo
-   char * in_git_path = malloc(sizeof(char)*(strlen(abs_path) + strlen(git_repo_path)));
+   char * in_git_path = malloc(sizeof(char)*(strlen(abs_path) + strlen(git_repo_path) + 1));
    sprintf(in_git_path, "%s%s", git_repo_path, abs_path);
 
    // remove any '/' at the begining to pass it as a relative path later
@@ -185,15 +180,11 @@ int sysgeep_save(char * file_path, int sflag)
 
    // add the file to the index
    git_repository * repo = NULL;
-   if (git_repository_open(&repo, git_repo_path))
-      error(1, 1, "Error: could not open git repository: %s", git_repo_path);
+   chk( git_repository_open(&repo, git_repo_path), "Error: could not open git repository: %s\n", git_repo_path );
    git_index * idx = NULL;
-   if (git_repository_index(&idx, repo))
-      error(1, 1, "Error: could not open index of repository: %s", git_repo_path);
-   if (git_index_add_bypath(idx, path_rel))
-      error(1, 1, "Error: could not add object to the index");
-   if (git_index_write(idx))
-      error(1, 1, "Error: could not write index to disk");
+   chk( git_repository_index(&idx, repo), "Error: could not open index of repository: %s\n", git_repo_path );
+   chk( git_index_add_bypath(idx, path_rel), "Error: could not add object to the index\n" );
+   chk( git_index_write(idx), "Error: could not write index to disk\n" );
 
    // take note of the permissions and owner:group
    // keep them on a line in a lexicographic ordered file at root of the git repo
@@ -201,17 +192,13 @@ int sysgeep_save(char * file_path, int sflag)
 
    // commit with the file name as message
    git_config * gitconfig = NULL;
-   if (git_config_open_default(&gitconfig))
-      error(1, 1, "Error: could not open git configuration");
+   chk( git_config_open_default(&gitconfig), "Error: could not open git configuration\n" );
    git_config_entry * entry_name;
-   if (git_config_get_entry((const git_config_entry **) &entry_name, gitconfig, "user.name"))
-      error(1, 1, "Error: could not get user.name entry");
+   chk( git_config_get_entry((const git_config_entry **) &entry_name, gitconfig, "user.name"), "Error: could not get user.name entry\n" );
    git_config_entry * entry_email;
-   if (git_config_get_entry((const git_config_entry **) &entry_email, gitconfig, "user.email"))
-      error(1, 1, "Error: could not get user.email entry");
+   chk( git_config_get_entry((const git_config_entry **) &entry_email, gitconfig, "user.email"), "Error: could not get user.email entry\n" );
    git_signature * me = NULL;
-   if (git_signature_now(&me, entry_name->value, entry_email->value))
-      error(1, 1, "Error: could not create commit signature");
+   chk( git_signature_now(&me, entry_name->value, entry_email->value), "Error: could not create commit signature\n" );
    //git_config_entry_free(entry_name); //API not yet available in libgit2 v2.21?
    //git_config_entry_free(entry_email); //API not yet available in libgit2 v2.21?
    git_config_free(gitconfig);
@@ -221,23 +208,19 @@ int sysgeep_save(char * file_path, int sflag)
    if (!git_repository_head_unborn(repo))
    {
       git_oid head_oid;
-      if (git_reference_name_to_id(&head_oid, repo, "HEAD"))
-         error(1, 1, "Error: could not get HEAD oid");
-      if (git_commit_lookup(&parents, repo, &head_oid))
-         error(1, 1, "Error: could not get HEAD commit");
+      chk( git_reference_name_to_id(&head_oid, repo, "HEAD"), "Error: could not get HEAD oid\n" );
+      chk( git_commit_lookup(&parents, repo, &head_oid), "Error: could not get HEAD commit\n" );
       nb_parents = 1;
    }
 
    git_tree * tree;
    git_oid tree_id;
-   if (git_index_write_tree(&tree_id, idx))
-      error(1, 1, "Error: could not get tree id");
-   if (git_tree_lookup(&tree, repo, &tree_id))
-      error(1, 1, "Error: could not get tree");
+   chk( git_index_write_tree(&tree_id, idx), "Error: could not get tree id\n" );
+   chk( git_tree_lookup(&tree, repo, &tree_id), "Error: could not get tree\n" );
 
    git_oid new_commit_id;
-   if (git_commit_create(&new_commit_id, repo, "HEAD", me, me, "UTF-8", file_path, tree, nb_parents, (const git_commit **) &parents))
-      error(1, 1, "Error: could not create the commit");
+   chk( git_commit_create(&new_commit_id, repo, "HEAD", me, me, "UTF-8", file_path, tree, nb_parents, (const git_commit **) &parents),
+      "Error: could not create the commit\n" );
 
    // free all the remaining
    git_signature_free(me);
@@ -255,6 +238,7 @@ int sysgeep_save(char * file_path, int sflag)
 // restore a file, copying it from the sysgeep repo to the host system
 int sysgeep_restore(char * file_path, int sflag)
 {
-   int ret = 0;
-   return ret;
+   fprintf(stderr, "Error: sysgeep_restore not yet implemented\n");
+   abort();
+   return 0;
 }
