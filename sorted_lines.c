@@ -95,29 +95,41 @@ static int comparison_function(char * line1, char * line2)
    return 0;
 }
 
-static int helper__index_of_closest_predecessor(char ** lines_array, char * str_to_lookup, int beg, int end)
+static int helper__index_of_closest_predecessor(char ** lines_array, char * str_to_lookup, bool * found, int beg, int end)
 {
-   if (beg == end) return -1;
-   int mid = (end - beg) / 2;
+   if (beg > end) return -1;
+   int mid = (end + beg) / 2;
    
    // if str_to_lookup == lines_array[mid], return mid
    // if str_to_lookup > lines_array[mid], return helper__(mid + 1, end)
    // if str_to_lookup < lines_array[mid], return helper__(beg, mid - 1)
    int comp = comparison_function(str_to_lookup, lines_array[mid]);
-   if (comp == 0) return mid;
-   if (comp == -1) return helper__index_of_closest_predecessor(lines_array, str_to_lookup, mid + 1, end);
-   if (comp == 1) return helper__index_of_closest_predecessor(lines_array, str_to_lookup, beg, mid - 1);
+   if (comp == 0)
+   {
+      *found = 1;
+      return mid;
+   }
+   if (comp == -1)
+   {
+      if (end == beg) { *found = 0; return mid; }
+      return helper__index_of_closest_predecessor(lines_array, str_to_lookup, found, mid + 1, end);
+   }
+   if (comp == 1)
+   {
+      if (end == beg) { *found = 0; return mid - 1; }
+      return helper__index_of_closest_predecessor(lines_array, str_to_lookup, found, beg, mid - 1);
+   }
    abort();
 }
 
 // If some line has exactly that name, will return its index.
 // Else, return the line that comes just before it (its lower bound).
 // If there are no lines in the array, return -1
-static int index_of_closest_predecessor(char ** lines_array, char * str_to_lookup)
+static int index_of_closest_predecessor(char ** lines_array, char * str_to_lookup, bool * found)
 {
    int len = sizeof(lines_array) / sizeof(char *);
    if (!len) return -1;
-   return helper__index_of_closest_predecessor(lines_array, str_to_lookup, 0, len - 1);
+   return helper__index_of_closest_predecessor(lines_array, str_to_lookup, found, 0, len - 1);
 }
 
 //XXX
@@ -127,7 +139,8 @@ void add_sorted_line(char * sysgeep_index_path, char * attributes_buffer)
    char ** lines = counted_file_to_lines_array(sysgeep_index_path);
 
    // search for the index where to insert
-   int pred_index = index_of_closest_predecessor(lines, attributes_buffer);
+   bool found = 0;
+   int pred_index = index_of_closest_predecessor(lines, attributes_buffer, &found);
    //TODO: if the line already exists, replace it.
 
    // insert
