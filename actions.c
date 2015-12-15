@@ -89,7 +89,8 @@ int sysgeep_setup(char * local_git_repo_path, int sflag)
 
    // copy the git repo name into the config file
    FILE * config_file_fd = config_file(sflag, 'w');
-   fprintf(config_file_fd, local_git_repo_path);
+   fwrite(local_git_repo_path, 1, sizeof(char)*strlen(local_git_repo_path), config_file_fd);
+
    fclose(config_file_fd);
    return 0;
 }
