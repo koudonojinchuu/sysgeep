@@ -174,6 +174,10 @@ int sysgeep_save(char * file_path, int sflag)
    // OR store permissions and owner:group in the commit message
    // TODO
 
+   // get file attributes
+   // pemissions:
+
+
    // commit with the file name as message
    git_config * gitconfig = NULL;
    if (git_config_open_default(&gitconfig))
@@ -198,10 +202,8 @@ int sysgeep_save(char * file_path, int sflag)
       git_oid head_oid;
       if (git_reference_name_to_id(&head_oid, repo, "HEAD"))
          error(1, 1, "Error: could not get HEAD oid");
-      //git_commit * parent_commit;
       if (git_commit_lookup(&parents, repo, &head_oid))
          error(1, 1, "Error: could not get HEAD commit");
-      //parents[0] = parent_commit;
       nb_parents = 1;
    }
 

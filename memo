@@ -6,3 +6,23 @@ I've discovered that Gibak does the same, too late. But I decided not to look at
 - When executed, without -s, will use user's $HOME config file.
 
 - Will require sudo or admin permissions when trying to do "restore" on some system config files
+
+
+If store permissions etc in the commit message, complexity to retrive permissions of a file:
+retrieve the latest modificating commit,
+thus walking all the commits and computing diff, and looking if the file is modified by the diff (stopping the walk if yes)
+Each diff means walking the whole tree attached to a commit, only up to the file to check.
+If H is heigh of the file in the directories tree, and N is the number of commits, in the worse case we get N*H diffs.
+For a recent file it is 1*H, and it gets close to N*H for an old file.
+There is no meaningful "average complexity" in this case.
+
+On the other hand, using a lexicographic order list of files (with permissions on the same line than the file path) :
+log(T) string comparisons to find the right line
+each string comparison takes, at worst, roughly a multiple of the heigh of the file in the directories tree (if we consider each directory having an average name length)
+This worst case is when all files are located at the same heigh in the directories tree.
+Thus the complexity is O(log(T)*H)
+
+So we have to choose between N (age of the repo, in count of commits) and T (number of files in the repo).
+Obviously, we will do more commits than there exist files, as we would like to not only create but also modify them.
+So N > T. Moreover, log is better than Id.
+So we choose O(log(T)*H) over O(N*H), so the "index file" is a better choice.
