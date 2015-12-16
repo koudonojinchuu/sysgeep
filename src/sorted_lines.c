@@ -20,7 +20,7 @@ void init_counted_file(char * counted_file_path)
   }
   else
   {
-    chk_t(S_ISREG(s.st_mode), "Error: the sysgeep index already exists but is not a regular file\n");
+    chk_t(S_ISREG(s.st_mode), "Error: the counted file %s already exists but is not a regular file\n", counted_file_path);
   }
 }
 
