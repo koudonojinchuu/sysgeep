@@ -2,7 +2,8 @@ CC=gcc -std=gnu11
 LDFLAGS=-lgit2
 CFLAGS=-g
 
-sysgeep: utils.o sysgeep.o actions.o sorted_lines.o
+sysgeep: $(addprefix src/,utils.o sysgeep.o actions.o sorted_lines.o)
+	$(CC) -o $% $(LDFLAGS) $^
 
 clean:
-	rm -f *.o sysgeep
+	rm -f src/*.o sysgeep
