@@ -170,14 +170,16 @@ void add_sorted_line(char * sysgeep_index_path, char * attributes_buffer)
   for (i=0; i<=pred_index; i++) new_array[i] = lines[i];
   new_array[1+pred_index] = attributes_buffer;
   for (i=pred_index+2+found; i<len+1; i++) new_array[i] = lines[i-1];
+  // the array "lines" gave its elements to "new_array", so simple free()
+  free(lines);
 
   // write back to a new file on disk
   char * new_index_path = malloc(sizeof(char)*(strlen(sysgeep_index_path) + 1 + 4));
   sprintf(new_index_path, "%s.new", sysgeep_index_path);
-  lines_array_to_counted_file(lines, new_index_path);
+  lines_array_to_counted_file(new_array, new_index_path);
 
-  // free array
-  free_lines_array(lines);
+  // free arrays
+  free_lines_array(new_array);
 
   // replace old index by the new
   unlink(sysgeep_index_path);
