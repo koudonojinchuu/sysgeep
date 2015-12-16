@@ -1,9 +1,27 @@
 #include <stdio.h>  // printf()
-#include <stdlib.h> // abort(), realloc()
+#include <stdlib.h> // abort()
 #include <string.h> // strlen()
 #include <unistd.h> // unlink()
 
-#include "utils.h"
+#include "utils.h" // chk(), chk_t(), pchk_t()
+
+void init_counted_file(char * counted_file_path)
+{
+   // do nothing if the counted file already exists
+   // else, create it with only one line containing '0'
+   struct stat s;
+   if (!stat(counted_file_path, &s))
+   {
+      FILE * counted_file_fd;
+      counted_file_fd = fopen(counted_file_path, "w+");
+      fwrite("0", 1, 1, counted_file_fd);
+      fclose(counted_file_fd);
+   }
+   else
+   {
+      chk_t(S_ISREG(s.st_mode), "Error: the sysgeep index is not a regular file\n");
+   }
+}
 
 // the first line must be the lines count (that's a "counted file")
 static char ** counted_file_to_lines_array(char * file_path)
