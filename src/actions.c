@@ -89,6 +89,7 @@ int sysgeep_setup(char * local_git_repo_path, int sflag)
 
   // if repo/.sysgeep_index not already exists, init a sysgeep_index file in the repo
   char * sysgeep_index_path = malloc(sizeof(char)*(strlen(local_git_repo_path)+strlen("/.sysgeep_index")+1));
+  sprintf(sysgeep_index_path, "%s/.sysgeep_index", local_git_repo_path);
   init_counted_file(sysgeep_index_path);
   free(sysgeep_index_path);
 
@@ -110,25 +111,7 @@ static char * get_git_repo(int sflag)
   return git_repo;
 }
 
-// make (recursively with its parents) a directory if it does not exist yet
-static void recurs_make_dirs(char * dir_path)
-{
-  // if dir exist, exit
-  struct stat s;
-  if (stat(dir_path, &s) == 0 && S_ISDIR(s.st_mode)) return;
-  // if dir does not exists,
-  // make its parent if it (the parent) does not exist
-  char * arg_dirname = strdup(dir_path);
-  recurs_make_dirs(dirname(arg_dirname));
-  free(arg_dirname);
-  // make the (child) directory
-  mode_t old_mask = umask(0);
-  chk( mkdir(dir_path, 0700),
-      "Error: could not create directory %s\n", dir_path );
-  umask(old_mask);
-}
-
-// add file to the sysgeep index
+// add file or directory to the sysgeep index
 // the argument must be the absolute path
 static void add_to_index(char * git_repo_path, char * abs_path)
 {
@@ -136,9 +119,9 @@ static void add_to_index(char * git_repo_path, char * abs_path)
   char * sysgeep_index_path = malloc(sizeof(char)*(strlen(git_repo_path) + strlen("/.sysgeep_index") + 1));
   sprintf(sysgeep_index_path, "%s/.sysgeep_index", git_repo_path);
 
-  // get file attributes and build line to put into the sysgeep index
+  // get file (or dir) attributes and build line to put into the sysgeep index
   struct stat s;
-  chk( stat(abs_path, &s), "Error: could not stat() the file to be saved\n" );
+  chk( stat(abs_path, &s), "Error: could not stat() the file or directory to be saved\n" );
   char * attributes_buffer = malloc(sizeof(char)*(strlen(abs_path) + UIDT_MAXLEN + GIDT_MAXLEN + PERM_LEN + 4));
   sprintf(attributes_buffer, "%s %d:%d %o", abs_path, s.st_uid, s.st_gid, s.st_mode);
 
@@ -149,7 +132,28 @@ static void add_to_index(char * git_repo_path, char * abs_path)
   free(sysgeep_index_path);
 }
 
-// save a given system file into the sysgeep repo
+// make (recursively with its parents) a directory if it does not exist yet
+// for each created directory, add it to the sysgeep index
+static void recurs_make_dirs_and_add_to_index(char * dir_path, char * git_repo_path)
+{
+  // if dir exist, exit
+  struct stat s;
+  if (stat(dir_path, &s) == 0 && S_ISDIR(s.st_mode)) return;
+  // if dir does not exists,
+  // make its parent if it (the parent) does not exist
+  char * arg_dirname = strdup(dir_path);
+  recurs_make_dirs_and_add_to_index(dirname(arg_dirname), git_repo_path);
+  free(arg_dirname);
+  // make the (child) directory
+  mode_t old_mask = umask(0);
+  chk( mkdir(dir_path, 0700),
+      "Error: could not create directory %s\n", dir_path );
+  umask(old_mask);
+  // add it to the index
+  add_to_index(git_repo_path, dir_path);
+}
+
+// save a given system file or dir into the sysgeep repo
 int sysgeep_save(char * file_path, int sflag)
 {
   char * git_repo_path = get_git_repo(sflag);
@@ -169,9 +173,10 @@ int sysgeep_save(char * file_path, int sflag)
   char * path_rel = abs_path + i;
 
   // check and create all the parent directories of "file_path" inside git repo
+  // and for, each create directory add, it to sysgeep_index
   char * arg_dirname = strdup(in_git_path);
   char * parent_dir = dirname(arg_dirname);
-  recurs_make_dirs(parent_dir);
+  recurs_make_dirs_and_add_to_index(parent_dir, git_repo_path);
   free(arg_dirname);
 
   // create or update the file copied from "file_path" in the git repo
