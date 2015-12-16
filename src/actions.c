@@ -182,7 +182,11 @@ int sysgeep_save(char * file_path, int sflag)
    fclose(src);
    fclose(file_to_write);
 
+   #if LIBGIT2_VER_MAJOR <= 0 && LIBGIT2_VER_MINOR < 22
    git_threads_init();
+   #else
+   git_libgit2_init();
+   #endif
 
    // add the file to the index
    git_repository * repo = NULL;
@@ -236,7 +240,11 @@ int sysgeep_save(char * file_path, int sflag)
    free(in_git_path);
    git_index_free(idx);
    git_repository_free(repo);
+   #if LIBGIT2_VER_MAJOR <= 0 && LIBGIT2_VER_MINOR < 22
    git_threads_shutdown();
+   #else
+   git_libgit2_shutdown();
+   #endif
    free(git_repo_path);
    return 0;
 }
