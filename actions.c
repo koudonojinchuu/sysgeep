@@ -87,6 +87,11 @@ int sysgeep_setup(char * local_git_repo_path, int sflag)
       "Error: %s is not a git repository\n", local_git_repo_path );
    free(git_repo_check);
 
+   // if repo/.sysgeep_index not already exists, init a sysgeep_index file in the repo
+   char * sysgeep_index_path = malloc(sizeof(char)*(strlen(local_git_repo_path)+strlen("/.sysgeep_index")+1));
+   init_counted_file(sysgeep_index_path);
+   free(sysgeep_index_path);
+
    // copy the git repo name into the config file
    FILE * config_file_fd = config_file(sflag, 'w');
    fwrite(local_git_repo_path, 1, sizeof(char)*strlen(local_git_repo_path), config_file_fd);

@@ -2,6 +2,7 @@
 #include <stdlib.h> // abort()
 #include <string.h> // strlen()
 #include <unistd.h> // unlink()
+#include <sys/stat.h>// stat()
 
 #include "utils.h" // chk(), chk_t(), pchk_t()
 
@@ -19,7 +20,7 @@ void init_counted_file(char * counted_file_path)
    }
    else
    {
-      chk_t(S_ISREG(s.st_mode), "Error: the sysgeep index is not a regular file\n");
+      chk_t(S_ISREG(s.st_mode), "Error: the sysgeep index already exists but is not a regular file\n");
    }
 }
 
