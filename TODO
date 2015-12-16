@@ -1,4 +1,6 @@
 TODO ASAP
 ---------
 
-Insert directories too into the sysgeep_index (to save their attributes).
+- Insert directories too into the sysgeep_index (to save their attributes).
+- Be robust to multiple sumultaneous run by creating a .lock file in the sysgeep git repo when used
+  -> because of the mess that could happen to .sysgeep_index else
