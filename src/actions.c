@@ -209,8 +209,10 @@ int sysgeep_save(char * file_path, int sflag)
   chk( git_config_get_entry((const git_config_entry **) &entry_email, gitconfig, "user.email"), "Error: could not get user.email entry\n" );
   git_signature * me = NULL;
   chk( git_signature_now(&me, entry_name->value, entry_email->value), "Error: could not create commit signature\n" );
-  //git_config_entry_free(entry_name); //API available from libgit2 v0.23.0
-  //git_config_entry_free(entry_email); //API available from libgit2 v0.23.0
+#if LIBGIT2_VER_MAJOR >= 0 && LIBGIT2_VER_MINOR >= 23
+  git_config_entry_free(entry_name); //API available from libgit2 v0.23.0
+  git_config_entry_free(entry_email); //API available from libgit2 v0.23.0
+#endif
   git_config_free(gitconfig);
 
   git_commit * parents;
