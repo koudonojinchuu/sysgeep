@@ -59,7 +59,6 @@ static s_lines_array * counted_file_to_lines_array(char * file_path)
   size_t n = 0;
   getline(&line, &n, fd);
   int nb_lines = atoi(line);
-  printf("recorded lines nb: %d\n", nb_lines);
 
   // allocate array of line pointers
   s_lines_array * lines = create_lines_array(nb_lines);
@@ -185,16 +184,9 @@ void add_sorted_line(char * sysgeep_index_path, char * attributes_buffer)
   s_lines_array * new_array = create_lines_array(len + !found);
   int i;
   for (i=0; i<=pred_index; i++) new_array->array[i] = lines->array[i];
-  new_array->array[1+pred_index] = attributes_buffer;
+  new_array->array[1+pred_index] = strdup(attributes_buffer);
   for (i=pred_index+2+found; i<len+1; i++) new_array->array[i] = lines->array[i-1];
 
-  printf("@@@@\n");
-  printf("len: %d\n", lines->length);
-  for (int j=0; j<lines->length; j++) printf("%s\n", lines->array[j]);
-  printf("@@@@\n");
-  printf("len: %d\n", new_array->length);
-  for (int j=0; j<new_array->length; j++) printf("%s\n", new_array->array[j]);
-  printf("@@@@\n");
   // the array "lines" gave its elements to "new_array" so free only the remaining
   free(lines->array);
   free(lines);
