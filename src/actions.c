@@ -115,15 +115,26 @@ static char * get_git_repo(int sflag)
 // the argument must be the absolute path
 static void add_to_index(char * git_repo_path, char * abs_path)
 {
+  // if the path does not start by '/', just add it (assume it is an absolute path anyway)
+  char * abs_path_dup = strdup(abs_path);
+  int path_len = strlen(abs_path_dup);
+  int i;
+  if ((!path_len) && (abs_path_dup[0] != '/'))
+  {
+    abs_path_dup = realloc(abs_path_dup, path_len + 1);
+    for (i=path_len;i>0;i--) abs_path_dup[i]=abs_path_dup[i-1];
+    abs_path_dup[0]='/';
+  }
+
   // path of the sysgeep index
   char * sysgeep_index_path = malloc(sizeof(char)*(strlen(git_repo_path) + strlen("/.sysgeep_index") + 1));
   sprintf(sysgeep_index_path, "%s/.sysgeep_index", git_repo_path);
 
   // get file (or dir) attributes and build line to put into the sysgeep index
   struct stat s;
-  chk( stat(abs_path, &s), "Error: could not stat() the file or directory to be saved\n" );
-  char * attributes_buffer = malloc(sizeof(char)*(strlen(abs_path) + UIDT_MAXLEN + GIDT_MAXLEN + PERM_LEN + 4));
-  sprintf(attributes_buffer, "%s %d:%d %o", abs_path, s.st_uid, s.st_gid, s.st_mode);
+  chk( stat(abs_path_dup, &s), "Error: could not stat() the file or directory to be saved\n" );
+  char * attributes_buffer = malloc(sizeof(char)*(strlen(abs_path_dup) + UIDT_MAXLEN + GIDT_MAXLEN + PERM_LEN + 4));
+  sprintf(attributes_buffer, "%s %d:%d %o", abs_path_dup, s.st_uid, s.st_gid, s.st_mode);
 
   // add the line to the sysgeep index
   add_sorted_line(sysgeep_index_path, attributes_buffer);
@@ -150,7 +161,7 @@ static void recurs_make_dirs_and_add_to_index(char * dir_path, char * git_repo_p
       "Error: could not create directory %s\n", dir_path );
   umask(old_mask);
   // add it to the index
-  add_to_index(git_repo_path, dir_path);
+  add_to_index(git_repo_path, dir_path + strlen(git_repo_path));
 }
 
 // save a given system file or dir into the sysgeep repo
