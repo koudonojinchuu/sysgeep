@@ -1,8 +1,6 @@
 TODO
 ----
 
-- also include .sysgeep_index in the add() and commit() steps
-
 - Be robust to multiple sumultaneous run by creating a .lock file in the sysgeep git repo when used
   -> because of the mess that could happen to .sysgeep_index else
 

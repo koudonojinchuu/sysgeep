@@ -198,6 +198,10 @@ int sysgeep_save(char * file_path, int sflag)
   fclose(src);
   fclose(file_to_write);
 
+  // take note of the permissions and owner:group
+  // keep them on a line in a lexicographic ordered file at root of the git repo
+  add_to_index(git_repo_path, abs_path);
+
 #if LIBGIT2_VER_MAJOR <= 0 && LIBGIT2_VER_MINOR < 22
   git_threads_init();
 #else
@@ -210,11 +214,9 @@ int sysgeep_save(char * file_path, int sflag)
   git_index * idx = NULL;
   chk( git_repository_index(&idx, repo), "Error: could not open index of repository: %s\n", git_repo_path );
   chk( git_index_add_bypath(idx, path_rel), "Error: could not add object to the index\n" );
+  // add the .sysgeep_index too
+  chk( git_index_add_bypath(idx, ".sysgeep_index"), "Error: could not add object to the index\n" );
   chk( git_index_write(idx), "Error: could not write index to disk\n" );
-
-  // take note of the permissions and owner:group
-  // keep them on a line in a lexicographic ordered file at root of the git repo
-  add_to_index(git_repo_path, abs_path);
 
   // commit with the file name as message
   git_config * gitconfig = NULL;
