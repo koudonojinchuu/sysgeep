@@ -221,10 +221,17 @@ int sysgeep_save(char * file_path, int sflag)
   // commit with the file name as message
   git_config * gitconfig = NULL;
   chk( git_config_open_default(&gitconfig), "Error: could not open git configuration\n" );
+#if LIBGIT2_VER_MAJOR >= 0 && LIBGIT2_VER_MINOR >= 23
+  git_config_entry * entry_name;
+  chk( git_config_get_entry(&entry_name, gitconfig, "user.name"), "Error: could not get user.name entry\n" );
+  git_config_entry * entry_email;
+  chk( git_config_get_entry(&entry_email, gitconfig, "user.email"), "Error: could not get user.email entry\n" );
+#else
   git_config_entry * entry_name;
   chk( git_config_get_entry((const git_config_entry **) &entry_name, gitconfig, "user.name"), "Error: could not get user.name entry\n" );
   git_config_entry * entry_email;
   chk( git_config_get_entry((const git_config_entry **) &entry_email, gitconfig, "user.email"), "Error: could not get user.email entry\n" );
+#endif
   git_signature * me = NULL;
   chk( git_signature_now(&me, entry_name->value, entry_email->value), "Error: could not create commit signature\n" );
 #if LIBGIT2_VER_MAJOR >= 0 && LIBGIT2_VER_MINOR >= 23
