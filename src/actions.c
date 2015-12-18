@@ -269,9 +269,24 @@ int sysgeep_save(char * file_path, int sflag)
   return 0;
 }
 
+
+
 // restore a file, copying it from the sysgeep repo to the host system
+// the argument is the path in the system, not the one in the sysgeep repo
 int sysgeep_restore(char * file_path, int sflag)
 {
+  char * git_repo_path = get_git_repo(sflag);
+
+  // get absolute path of "file_path"
+  char * abs_path = realpath(file_path, NULL); //TODO like option "realpath -s"
+  pchk_t( abs_path, "Error: could not find the real path of: %s\n", file_path );
+
+  // make it a path inside the git repo
+  char * in_git_path = malloc(sizeof(char)*(strlen(abs_path) + strlen(git_repo_path) + 1));
+  sprintf(in_git_path, "%s%s", git_repo_path, abs_path);
+
+  
+
   fprintf(stderr, "Error: sysgeep_restore not yet implemented\n");
   abort();
   return 0;
