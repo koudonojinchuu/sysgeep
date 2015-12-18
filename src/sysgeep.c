@@ -21,7 +21,7 @@ static void usage(void)
       "\tsysgeep [-s] restore <path-to-file>\n");
 }
 
-int main(unsigned int argc, char ** argv)
+int main(int argc, char ** argv)
 {
   int c;
   int hflag = 0;
