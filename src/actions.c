@@ -134,7 +134,7 @@ static void add_to_index(char * git_repo_path, char * abs_path)
   struct stat s;
   chk( stat(abs_path_dup, &s), "Error: could not stat() the file or directory to be saved\n" );
   char * attributes_buffer = malloc(sizeof(char)*(strlen(abs_path_dup) + UIDT_MAXLEN + GIDT_MAXLEN + PERM_LEN + 4));
-  sprintf(attributes_buffer, "%s %d:%d %o", abs_path_dup, s.st_uid, s.st_gid, s.st_mode);
+  sprintf(attributes_buffer, "%s %d:%d %06o", abs_path_dup, s.st_uid, s.st_gid, s.st_mode);
 
   // add the line to the sysgeep index
   add_sorted_line(sysgeep_index_path, attributes_buffer);

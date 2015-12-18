@@ -184,8 +184,8 @@ void add_sorted_line(char * sysgeep_index_path, char * attributes_buffer)
   s_lines_array * new_array = create_lines_array(len + !found);
   int i;
   for (i=0; i<=pred_index; i++) new_array->array[i] = lines->array[i];
-  new_array->array[1+pred_index] = strdup(attributes_buffer);
-  for (i=pred_index+2+found; i<len+1; i++) new_array->array[i] = lines->array[i-1];
+  new_array->array[!found+pred_index] = strdup(attributes_buffer);
+  for (i=pred_index+1+!found; i<len+!found; i++) new_array->array[i] = lines->array[i-!found];
 
   // the array "lines" gave its elements to "new_array" so free only the remaining
   free(lines->array);
