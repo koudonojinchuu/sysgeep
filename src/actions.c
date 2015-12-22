@@ -80,6 +80,13 @@ static FILE * config_file(int sflag, char rw)
   return config_file_path_fd;
 }
 
+static char * get_sysgeep_index(char * git_repo_path)
+{
+  char * sysgeep_index_path = malloc(sizeof(char)*(strlen(git_repo_path) + strlen("/.sysgeep_index") + 1));
+  sprintf(sysgeep_index_path, "%s/.sysgeep_index", git_repo_path);
+  return sysgeep_index_path;
+}
+
 int sysgeep_setup(char * local_git_repo_path, int sflag)
 {
   // check if local_git_repo_path is a git repo
@@ -111,13 +118,6 @@ static char * get_git_repo(int sflag)
   getline(&git_repo, &n, config_file_fd);   
   fclose(config_file_fd);
   return git_repo;
-}
-
-static char * get_sysgeep_index(char * git_repo_path)
-{
-  char * sysgeep_index_path = malloc(sizeof(char)*(strlen(git_repo_path) + strlen("/.sysgeep_index") + 1));
-  sprintf(sysgeep_index_path, "%s/.sysgeep_index", git_repo_path);
-  return sysgeep_index_path;
 }
 
 // add file or directory to the sysgeep index
