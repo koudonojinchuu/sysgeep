@@ -46,7 +46,7 @@ char *realpath_s(char * pathname) {
 
   char * pathname_ptr = pathname;
 	int dots = 0;
-	while (buf_ptr < buf_last) {
+	while (buf_ptr <= buf_last) {
 		*buf_ptr = *pathname_ptr; // copy chars from pathname to current buf_ptr
 
     // if we are on '/', go ahead, then if again on a '/', go ahead,
@@ -57,10 +57,10 @@ char *realpath_s(char * pathname) {
 			pathname_ptr--;
 		}
 
-    // if pathname_ptr[0]=='\0' or if on a '/'
+    // if we are on a slash or at the end of pathname ('\0')
 		if (*pathname_ptr == '/' || !*pathname_ptr)
 		{
-      // we reached a slash or the end, so go backwards and reduce the last recorded .. or . occurrence
+      // go backwards and reduce the last recorded .. or . occurrence
 			if (dots == 1 || dots == 2) {
 				while (dots > 0 && --buf_ptr > cwd) if (*buf_ptr == '/') dots--;
         buf_ptr[1]='\0'; // terminates temporarily the result string
@@ -88,6 +88,7 @@ char *realpath_s(char * pathname) {
   // error if we reached "buf_last" but some characters of pathname are still left
 	if (*pathname_ptr) {
 		errno = ENOMEM;
+    fprintf(stderr, "error, no memory\n");
 		return NULL;
 	}
 
