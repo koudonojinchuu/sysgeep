@@ -168,7 +168,7 @@ static int index_of_closest_predecessor(s_lines_array * lines_array, char * str_
   if (!len) return -1;
   int result = helper__index_of_closest_predecessor(lines_array, str_to_lookup, found, 0, len - 1);
   // check that it is not just a keyword to whom the searched keyword is a prefix
-  char after_keyword = lines_array->array[strlen(str_to_lookup)];
+  char after_keyword = lines_array->array[result][strlen(str_to_lookup)];
   int isprefix = (after_keyword == ' ' || after_keyword == '\0');
   if (*found && isprefix)
   {
