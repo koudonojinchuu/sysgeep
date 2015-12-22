@@ -1,3 +1,8 @@
+#include <stdio.h>  // sprintf(), NULL
+#include <unistd.h> // getcwd()
+#include <string.h> // strlen()
+#include <stdlib.h> // malloc()
+
 // the same behaviour as the command "realpath -s"
 char *realpath_s(char * pathname) {
 
