@@ -2,6 +2,7 @@
 #include <unistd.h> // getcwd()
 #include <string.h> // strlen()
 #include <stdlib.h> // malloc()
+#include <errno.h>  // errno
 
 // the same behaviour as the command "realpath -s"
 char *realpath_s(char * pathname) {
