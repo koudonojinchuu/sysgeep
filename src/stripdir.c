@@ -31,11 +31,13 @@ char *realpath_s(char * pathname) {
   if (cwd_needs_trailing_slash)
   {
     sprintf(buf, "%s/", cwd);
+    free(cwd);
     buf_ptr = buf + cwd_len + 1;
   }
   else if (cwd)
   {
     sprintf(buf, "%s", cwd);
+    free(cwd);
     buf_ptr = buf + cwd_len;
   }
   else
