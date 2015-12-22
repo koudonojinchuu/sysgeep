@@ -289,8 +289,14 @@ int sysgeep_restore(char * file_path, int sflag)
   // check whether it is a directory (check in .sysgeep_index)
   // if it is not in sysgeep_index, error.
   char * attributes = lookup_sorted_line(sysgeep_index_path, abs_path);
+  pchk_t( attributes, "Error: could not find file in sysgeep_index: %s", abs_path );
   attributes += strlen(abs_path) + 1; // go after the keyword and its trailing space
-  //TODO
+  char * endptr;
+  int user = strtol(attributes, &endptr, 10);
+  ++endptr;
+  int group = strtol(endptr, &endptr, 10);
+  ++endptr;
+  int modes = strtol(endptr, &endptr, 8);
   free(attributes);
 
   // cp from inside the git repo to the absolute path on the system
@@ -306,7 +312,7 @@ int sysgeep_restore(char * file_path, int sflag)
   // set permissions
   //TODO
 
-  fprintf(stderr, "Error: sysgeep_restore not yet implemented\n");
+  printf("Found file: permissions: %o\n", modes);
 
   free(abs_path);
 

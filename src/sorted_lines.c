@@ -228,7 +228,7 @@ char * lookup_sorted_line(char * index_path, char * str_to_lookup)
   int found = 0;
   int pred_index = index_of_closest_predecessor(lines, str_to_lookup, &found);
 
-  if (!found)
+  if (found)
   {
     char * whole_line_found = strdup(lines->array[pred_index]);
     free_lines_array(lines);
