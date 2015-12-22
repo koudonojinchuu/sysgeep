@@ -288,7 +288,7 @@ int sysgeep_restore(char * file_path, int sflag)
 
   // check whether it is a directory (check in .sysgeep_index)
   // if it is not in sysgeep_index, error.
-  //TODO
+  lookup_sorted_line(sysgeep_index_path, );
 
   // cp from inside the git repo to the absolute path on the system
   int in_fd = open(in_git_path, O_RDONLY);
@@ -296,13 +296,12 @@ int sysgeep_restore(char * file_path, int sflag)
   int out_fd = open(abs_path, O_WRONLY | O_CREAT);
   assert(out_fd >= 0);
   char buf[8192];
-  while (1) {
-      ssize_t result = read(in_fd, &buf[0], sizeof(buf));
-      if (!result) break;
-      assert(result > 0);
+  ssize_t result;
+  while (result = read(in_fd, &buf[0], sizeof(buf)))
       assert(write(out_fd, &buf[0], result) == result);
-  }
   
+  // set permissions
+  //TODO
 
   fprintf(stderr, "Error: sysgeep_restore not yet implemented\n");
 

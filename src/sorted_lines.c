@@ -170,10 +170,10 @@ static int index_of_closest_predecessor(s_lines_array * lines_array, char * str_
 }
 
 // add a line in the sorted index, or replace the line if the same key preexisted
-void add_sorted_line(char * sysgeep_index_path, char * attributes_buffer)
+void add_sorted_line(char * index_path, char * attributes_buffer)
 {
   // load all lines into an array
-  s_lines_array * lines = counted_file_to_lines_array(sysgeep_index_path);
+  s_lines_array * lines = counted_file_to_lines_array(index_path);
   int len = lines->length;
 
   // search for the index where to insert
@@ -192,21 +192,36 @@ void add_sorted_line(char * sysgeep_index_path, char * attributes_buffer)
   free(lines);
 
   // write back to a new file on disk
-  char * new_index_path = malloc(sizeof(char)*(strlen(sysgeep_index_path) + 1 + 4));
-  sprintf(new_index_path, "%s.new", sysgeep_index_path);
+  char * new_index_path = malloc(sizeof(char)*(strlen(index_path) + 1 + 4));
+  sprintf(new_index_path, "%s.new", index_path);
   lines_array_to_counted_file(new_array, new_index_path);
 
   // free arrays
   free_lines_array(new_array);
 
   // replace old index by the new
-  unlink(sysgeep_index_path);
-  rename(new_index_path, sysgeep_index_path);
+  unlink(index_path);
+  rename(new_index_path, index_path);
   free(new_index_path);
 }
 
-void lookup_sorted_line(char * sysgeep_index_path, char * file_path)
+// return the line corresponding to str_to_lookup in index_path
+// return NULL if not found
+char * lookup_sorted_line(char * index_path, char * str_to_lookup)
 {
-  printf("lookup not yet implemented\n");
-  abort();
+  // load all lines into an array
+  s_lines_array * lines = counted_file_to_lines_array(index_path);
+  int len = lines->length;
+  
+  // lookup for the line's index
+  int found = 0;
+  int pred_index = index_of_closest_predecessor(lines, str_to_lookup, &found);
+
+  if (!found)
+  {
+    char * whole_line_found = strdup(lines->array[pred_index]);
+    free_lines_array(lines);
+    return whole_line_found;
+  }
+  return NULL;
 }
