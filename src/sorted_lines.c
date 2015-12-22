@@ -166,7 +166,18 @@ static int index_of_closest_predecessor(s_lines_array * lines_array, char * str_
 {
   int len = lines_array->length;
   if (!len) return -1;
-  return helper__index_of_closest_predecessor(lines_array, str_to_lookup, found, 0, len - 1);
+  int result = helper__index_of_closest_predecessor(lines_array, str_to_lookup, found, 0, len - 1);
+  // check that it is not just a keyword to whom the searched keyword is a prefix
+  char after_keyword = lines_array->array[strlen(str_to_lookup)];
+  int isprefix = (after_keyword == ' ' || after_keyword == '\0');
+  if (*found && isprefix)
+  {
+    *found = 0;
+    // decrement the predecessor index
+    // the line was allegedly found, so result >= 0
+    --result;
+  }
+  return result;
 }
 
 // add a line in the sorted index, or replace the line if the same key preexisted

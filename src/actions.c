@@ -11,7 +11,7 @@
 
 #include "utils.h"
 #include "sorted_lines.h"
-#include "stripdir.c"
+#include "stripdir.h"
 
 #define USER_CONFIG_FILE "sysgeep.conf"
 #define USER_CONFIG_DIR ".config/sysgeep/"
@@ -288,7 +288,10 @@ int sysgeep_restore(char * file_path, int sflag)
 
   // check whether it is a directory (check in .sysgeep_index)
   // if it is not in sysgeep_index, error.
-  lookup_sorted_line(sysgeep_index_path, );
+  char * attributes = lookup_sorted_line(sysgeep_index_path, abs_path);
+  attributes += strlen(abs_path) + 1; // go after the keyword and its trailing space
+  //TODO
+  free(attributes);
 
   // cp from inside the git repo to the absolute path on the system
   int in_fd = open(in_git_path, O_RDONLY);
