@@ -168,14 +168,17 @@ static int index_of_closest_predecessor(s_lines_array * lines_array, char * str_
   if (!len) return -1;
   int result = helper__index_of_closest_predecessor(lines_array, str_to_lookup, found, 0, len - 1);
   // check that it is not just a keyword to whom the searched keyword is a prefix
-  char after_keyword = lines_array->array[result][strlen(str_to_lookup)];
-  int isprefix = (after_keyword == ' ' || after_keyword == '\0');
-  if (*found && isprefix)
+  if (*found)
   {
-    *found = 0;
-    // decrement the predecessor index
-    // the line was allegedly found, so result >= 0
-    --result;
+    char after_keyword = lines_array->array[result][strlen(str_to_lookup)];
+    int isprefix = (after_keyword == ' ' || after_keyword == '\0');
+    if (isprefix)
+    {
+      *found = 0;
+      // decrement the predecessor index
+      // the line was allegedly found, so result >= 0
+      --result;
+    }
   }
   return result;
 }
@@ -223,7 +226,7 @@ char * lookup_sorted_line(char * index_path, char * str_to_lookup)
   // load all lines into an array
   s_lines_array * lines = counted_file_to_lines_array(index_path);
   int len = lines->length;
-  
+
   // lookup for the line's index
   int found = 0;
   int pred_index = index_of_closest_predecessor(lines, str_to_lookup, &found);
