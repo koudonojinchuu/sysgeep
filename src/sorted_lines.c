@@ -111,6 +111,7 @@ static int comparison_function(char * line1, char * line2)
 {
   int len1 = get_length_key(line1);
   int len2 = get_length_key(line2);
+  printf("str1: %s ; str2: %s\n",line1, line2);
 
   // degenerate cases
   if ((len1 == 0) && (len2 == 0)) return 0;
@@ -141,6 +142,7 @@ static int helper__index_of_closest_predecessor(s_lines_array * lines_array, cha
   // if str_to_lookup > lines_array[mid], return helper__(mid + 1, end)
   // if str_to_lookup < lines_array[mid], return helper__(beg, mid - 1)
   int comp = comparison_function(str_to_lookup, lines_array->array[mid]);
+  printf("comp result: %d\n",comp);
   if (comp == 0)
   {
     *found = 1;
@@ -167,13 +169,16 @@ static int index_of_closest_predecessor(s_lines_array * lines_array, char * str_
   int len = lines_array->length;
   if (!len) return -1;
   int result = helper__index_of_closest_predecessor(lines_array, str_to_lookup, found, 0, len - 1);
+  printf("foundtemp? %d\n", *found);
   // check that it is not just a keyword to whom the searched keyword is a prefix
   if (*found)
   {
+  printf("checking...\n");
     char after_keyword = lines_array->array[result][strlen(str_to_lookup)];
     int isprefix = (after_keyword == ' ' || after_keyword == '\0');
     if (isprefix)
     {
+  printf("rejecting...\n");
       *found = 0;
       // decrement the predecessor index
       // the line was allegedly found, so result >= 0
