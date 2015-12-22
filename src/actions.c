@@ -6,9 +6,12 @@
 #include <unistd.h> // access()
 #include <libgen.h> // dirname(), basename()
 #include <git2.h>   // use git without system() calls
+#include <fcntl.h>  // O_RDONLY, O_WRONLY, O_CREAT
+#include <assert.h> // assert()
 
 #include "utils.h"
 #include "sorted_lines.h"
+#include "stripdir.c"
 
 #define USER_CONFIG_FILE "sysgeep.conf"
 #define USER_CONFIG_DIR ".config/sysgeep/"
@@ -269,8 +272,6 @@ int sysgeep_save(char * file_path, int sflag)
   return 0;
 }
 
-
-
 // restore a file, copying it from the sysgeep repo to the host system
 // the argument is the path in the system, not the one in the sysgeep repo
 int sysgeep_restore(char * file_path, int sflag)
@@ -278,16 +279,34 @@ int sysgeep_restore(char * file_path, int sflag)
   char * git_repo_path = get_git_repo(sflag);
 
   // get absolute path of "file_path"
-  char * abs_path = realpath(file_path, NULL); //TODO like option "realpath -s"
+  char * abs_path = realpath_s(file_path); // like command line's "realpath -s"
   pchk_t( abs_path, "Error: could not find the real path of: %s\n", file_path );
 
   // make it a path inside the git repo
   char * in_git_path = malloc(sizeof(char)*(strlen(abs_path) + strlen(git_repo_path) + 1));
   sprintf(in_git_path, "%s%s", git_repo_path, abs_path);
 
+  // check whether it is a directory (check in .sysgeep_index)
+  // if it is not in sysgeep_index, error.
+  //TODO
+
+  // cp from inside the git repo to the absolute path on the system
+  int in_fd = open(in_git_path, O_RDONLY);
+  assert(in_fd >= 0);
+  int out_fd = open(abs_path, O_WRONLY | O_CREAT);
+  assert(out_fd >= 0);
+  char buf[8192];
+  while (1) {
+      ssize_t result = read(in_fd, &buf[0], sizeof(buf));
+      if (!result) break;
+      assert(result > 0);
+      assert(write(out_fd, &buf[0], result) == result);
+  }
   
 
   fprintf(stderr, "Error: sysgeep_restore not yet implemented\n");
-  abort();
+
+  free(abs_path);
+
   return 0;
 }
