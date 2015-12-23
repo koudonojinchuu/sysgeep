@@ -7,7 +7,6 @@
 // the same behaviour as the command "realpath -s"
 char *realpath_s(char * pathname) {
 
-	char * result;
   char * cwd = NULL;
   int cwd_len = 0;
   int cwd_needs_trailing_slash = 0;
