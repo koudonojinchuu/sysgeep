@@ -6,4 +6,4 @@ sysgeep: $(addprefix src/,sysgeep.o actions.o utils.o sorted_lines.o stripdir.o)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm -f src/*.o sysgeep
+	rm -f src/*.o sysgeep src/test-stripdir
