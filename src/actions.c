@@ -318,7 +318,7 @@ int sysgeep_restore(char * file_path, int sflag)
   assert(out_fd >= 0);
   char buf[8192];
   ssize_t result;
-  while (result = read(in_fd, &buf[0], sizeof(buf)))
+  while ( ( result = read(in_fd, &buf[0], sizeof(buf)) ) )
       assert(write(out_fd, &buf[0], result) == result);
   
   // set permissions
