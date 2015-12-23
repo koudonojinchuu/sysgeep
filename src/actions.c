@@ -296,9 +296,8 @@ int sysgeep_restore(char * file_path, int sflag)
   char * attributes = lookup_sorted_line(sysgeep_index_path, abs_path);
   free(sysgeep_index_path);
   pchk_t( attributes, "Error: could not find file in sysgeep_index: %s", abs_path );
-  attributes += strlen(abs_path) + 1; // go after the keyword and its trailing space
-  char * endptr;
-  int user = strtol(attributes, &endptr, 10);
+  char * endptr = attributes + strlen(abs_path) + 1; // go after the keyword and its trailing space
+  int user = strtol(endptr, &endptr, 10);
   ++endptr;
   int group = strtol(endptr, &endptr, 10);
   ++endptr;

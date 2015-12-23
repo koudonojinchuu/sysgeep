@@ -122,39 +122,31 @@ static int get_length_key(char * line)
 
 // lexicographical order
 // Compare only up to end1 and end2 (behave like they point to a '\0')
+// to compare up to the "natural" end of the string, put NULL instead of the interested endx
 // return -1 if line1 > line2
 // return  1 if line1 < line2
 // return  0 if line1 = line2
 // ** SPECIFIC **
 static int comparison_function(char * line1, char * line2, char * end1, char * end2)
 {
-
-///
-  
-///
-
-  int len1 = get_length_key(line1);
-  int len2 = get_length_key(line2);
-  printf("str1: %s ; str2: %s\n",line1, line2);
-
-  // degenerate cases
-  if ((len1 == 0) && (len2 == 0)) return 0;
-  if (!len1) return 1;
-  if (!len2) return -1;
-
-  // main cases
-  int minlen = (len1 <= len2) ? len1 : len2;
-  int i;
-  for (i=0; i<minlen; i++)
-  {
-    if (line1[i] > line2[i]) return -1;
-    if (line1[i] < line2[i]) return 1;
-  }
-  // one key is prefix of the other
-  if (len1 > len2) return -1;
-  if (len1 < len2) return 1;
-
-  return 0;
+  char * ptr1 = line1;
+  char * ptr2 = line2;
+  if (!end1) end1 = line1 + strlen(line1);
+  if (!end2) end2 = line2 + strlen(line2);
+  while (ptr1 != end1 && ptr2 != end2 && *(ptr1++) == *(ptr2++));
+  // equality
+  if (ptr1 == end1 && ptr2 == end2) return 0;
+  // one line is prefix of the other
+  if (ptr1 == end1) return 1;
+  if (ptr2 == end2) return -1;
+  // other difference
+  --ptr1;
+  --ptr2;
+  if (*ptr1 > *ptr2) return -1;
+  if (*ptr1 < *ptr2) return 1;
+  // error
+  fprintf(stderr, "Error: abnormal comparison\n");
+  return -2;
 }
 
 static int helper__index_of_closest_predecessor(s_lines_array * lines_array, char * str_to_lookup, int * found, int beg, int end)
@@ -165,8 +157,7 @@ static int helper__index_of_closest_predecessor(s_lines_array * lines_array, cha
   // if str_to_lookup == lines_array[mid], return mid
   // if str_to_lookup > lines_array[mid], return helper__(mid + 1, end)
   // if str_to_lookup < lines_array[mid], return helper__(beg, mid - 1)
-  int comp = comparison_function(str_to_lookup, lines_array->array[mid]);
-  printf("comp result: %d\n",comp);
+  int comp = comparison_function(str_to_lookup, lines_array->array[mid], NULL, lines_array->ends_of_keys[mid]);
   if (comp == 0)
   {
     *found = 1;
@@ -192,24 +183,7 @@ static int index_of_closest_predecessor(s_lines_array * lines_array, char * str_
 {
   int len = lines_array->length;
   if (!len) return -1;
-  int result = helper__index_of_closest_predecessor(lines_array, str_to_lookup, found, 0, len - 1);
-  printf("foundtemp? %d\n", *found);
-  // check that it is not just a keyword to whom the searched keyword is a prefix
-  if (*found)
-  {
-  printf("checking...\n");
-    char after_keyword = lines_array->array[result][strlen(str_to_lookup)];
-    int isprefix = (after_keyword == ' ' || after_keyword == '\0');
-    if (isprefix)
-    {
-  printf("rejecting...\n");
-      *found = 0;
-      // decrement the predecessor index
-      // the line was allegedly found, so result >= 0
-      --result;
-    }
-  }
-  return result;
+  return helper__index_of_closest_predecessor(lines_array, str_to_lookup, found, 0, len - 1);
 }
 
 // add a line in the sorted index, or replace the line if the same key preexisted
