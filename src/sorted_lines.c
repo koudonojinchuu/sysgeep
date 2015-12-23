@@ -228,7 +228,6 @@ char * lookup_sorted_line(char * index_path, char * str_to_lookup)
 {
   // load all lines into an array
   s_lines_array * lines = counted_file_to_lines_array(index_path);
-  int len = lines->length;
 
   // lookup for the line's index
   int found = 0;
