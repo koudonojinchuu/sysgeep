@@ -108,18 +108,6 @@ static void lines_array_to_counted_file(s_lines_array * lines, char * counted_fi
   fclose(fd);
 }
 
-// return the length of the line truncated to the first word (the key, i.e. the pathname)
-static int get_length_key(char * line)
-{
-  // the line is of the form:
-  // /usr/my/path/to/file user:group 100644
-  // we want to output only the length of /usr/my/path/to/file
-  int len = strlen(line);
-  int cursor = len - 8;
-  while (line[cursor] != ' ') cursor--;
-  return cursor;
-}
-
 // lexicographical order
 // Compare only up to end1 and end2 (behave like they point to a '\0')
 // to compare up to the "natural" end of the string, put NULL instead of the interested endx
