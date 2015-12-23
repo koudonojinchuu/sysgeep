@@ -1,7 +1,7 @@
 #include <stdlib.h> // getenv(), abort(), realpath()
 #include <stdio.h>  // fprintf()
 #include <string.h> // strlen()
-#include <sys/stat.h>// stat()
+#include <sys/stat.h>// stat(), S_ISREG()
 #include <error.h>  // error()
 #include <unistd.h> // access()
 #include <libgen.h> // dirname(), basename()
@@ -297,7 +297,6 @@ int sysgeep_restore(char * file_path, int sflag)
   char * in_git_path = malloc(sizeof(char)*(strlen(abs_path) + strlen(git_repo_path) + 1));
   sprintf(in_git_path, "%s%s", git_repo_path, abs_path);
 
-  // check whether it is a directory (check in .sysgeep_index)
   // if it is not in sysgeep_index, error.
   char * sysgeep_index_path = get_sysgeep_index(git_repo_path);
   char * attributes = lookup_sorted_line(sysgeep_index_path, abs_path);
@@ -311,16 +310,20 @@ int sysgeep_restore(char * file_path, int sflag)
   int modes = strtol(endptr, &endptr, 8);
   free(attributes);
 
-  // cp from inside the git repo to the absolute path on the system
-  int in_fd = open(in_git_path, O_RDONLY);
-  assert(in_fd >= 0);
-  int out_fd = open(abs_path, O_WRONLY | O_CREAT);
-  assert(out_fd >= 0);
-  char buf[8192];
-  ssize_t result;
-  while ( ( result = read(in_fd, &buf[0], sizeof(buf)) ) )
+  // check whether it is a directory (check in .sysgeep_index)
+  if S_ISREG(modes)
+  {
+    // cp from inside the git repo to the absolute path on the system
+    int in_fd = open(in_git_path, O_RDONLY);
+    assert(in_fd >= 0);
+    int out_fd = open(abs_path, O_WRONLY | O_CREAT);
+    assert(out_fd >= 0);
+    char buf[8192];
+    ssize_t result;
+    while ( ( result = read(in_fd, &buf[0], sizeof(buf)) ) )
       assert(write(out_fd, &buf[0], result) == result);
-  
+  }
+
   // set permissions
   //TODO
 

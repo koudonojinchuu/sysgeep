@@ -19,9 +19,12 @@ char *realpath_s(char * pathname) {
     if (cwd[cwd_len - 1] != '/') cwd_needs_trailing_slash = 1;
 	}
 
+  int pathname_len = strlen(pathname);
+  // corner case with pathname == "."
+  if (pathname_len == 1 && pathname[0] == '.') return cwd;
+
   // the maximum required size for the buffer will be 
   // len_cwd + len_pathname + 2
-  int pathname_len = strlen(pathname);
   int buf_len = cwd_len + pathname_len + 1;
   char * buf_ptr;
   char * buf = malloc(sizeof(char)*(buf_len + 1));
