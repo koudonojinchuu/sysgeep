@@ -17,3 +17,7 @@ For later:
   * different package names to provide a given prerequisite
 
 Language: C
+The language choice can be surprising.
+Actually it has several benefits:
+  - C speed: can be used for speedy configuration and launch of a VM instance,
+  - self-containedness: if compiled in static, then self-contained, can be checksumed and securised easily

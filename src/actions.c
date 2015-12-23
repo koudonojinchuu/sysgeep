@@ -310,8 +310,8 @@ int sysgeep_restore(char * file_path, int sflag)
   int modes = strtol(endptr, &endptr, 8);
   free(attributes);
 
-  // check whether it is a directory (check in .sysgeep_index)
-  if S_ISREG(modes)
+  // check whether it is a directory according to .sysgeep_index infos
+  if S_ISREG(modes) // if regular file, copy
   {
     // cp from inside the git repo to the absolute path on the system
     int in_fd = open(in_git_path, O_RDONLY);
@@ -323,10 +323,13 @@ int sysgeep_restore(char * file_path, int sflag)
     while ( ( result = read(in_fd, &buf[0], sizeof(buf)) ) )
       assert(write(out_fd, &buf[0], result) == result);
   }
+  else if S_ISDIR(modes) // if directory, make it when absent
+  {
+    //TODO
+  }
 
   // set permissions
   //TODO
-
   printf("Found file: permissions: %o\n", modes);
 
   free(abs_path);
