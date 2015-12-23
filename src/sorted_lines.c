@@ -6,10 +6,13 @@
 
 #include "utils.h" // chk(), chk_t(), pchk_t()
 
+// in the code, ** SPECIFIC ** means it is not generic of a "sorted lines" library
+
 // the difference VS a raw char ** is that length can be 0
 typedef struct struct_lines_array {
   char ** array;
   int length;
+  char ** ends_of_keys; // stores where (index) would be '\0' if each line was shortened to its leading pathname
 } s_lines_array;
 
 static s_lines_array * create_lines_array(int length)
@@ -17,6 +20,7 @@ static s_lines_array * create_lines_array(int length)
   s_lines_array * array_obj = malloc(sizeof(s_lines_array));
   array_obj->length = length;
   array_obj->array = malloc(sizeof(char *)*length);
+  array_obj->ends_of_keys = malloc(sizeof(char *)*length);
   return array_obj;
 }
 
@@ -26,6 +30,7 @@ static void free_lines_array(s_lines_array * lines_array)
   int len = lines_array->length;
   for (i=0; i<len; i++) free(lines_array->array[i]);
   free(lines_array->array);
+  free(lines_array->ends_of_keys);
   free(lines_array);
 }
 
@@ -46,6 +51,17 @@ void init_counted_file(char * counted_file_path)
     chk_t(S_ISREG(s.st_mode), "Error: the counted file %s already exists but is not a regular file\n", counted_file_path);
     // if already exists and is a regular file, do nothing
   }
+}
+
+// get the end of the pathname on the given line (where would be '\0'), before the attributes
+// ** SPECIFIC **
+static char * get_key_end(char * line)
+{
+  // go to the last character of 'user:group'
+  char * result = line + strlen(line) - 6 - 2; // PERMLEN==6
+  // find the space before 'user:group'
+  while (*result != ' ') --result;
+  return result;
 }
 
 // the first line must be the lines count (that's a "counted file")
@@ -72,6 +88,7 @@ static s_lines_array * counted_file_to_lines_array(char * file_path)
     int line_end = strlen(line) - 1;
     if ((line_end >= 0) && (line[line_end] == '\n')) line[line_end]='\0';
     lines->array[line_count] = line;
+    lines->ends_of_keys[line_count] = get_key_end(line);
     line = NULL;
     line_count++;
   }
@@ -104,11 +121,18 @@ static int get_length_key(char * line)
 }
 
 // lexicographical order
+// Compare only up to end1 and end2 (behave like they point to a '\0')
 // return -1 if line1 > line2
 // return  1 if line1 < line2
 // return  0 if line1 = line2
-static int comparison_function(char * line1, char * line2)
+// ** SPECIFIC **
+static int comparison_function(char * line1, char * line2, char * end1, char * end2)
 {
+
+///
+  
+///
+
   int len1 = get_length_key(line1);
   int len2 = get_length_key(line2);
   printf("str1: %s ; str2: %s\n",line1, line2);
