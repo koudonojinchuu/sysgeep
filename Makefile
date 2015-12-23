@@ -1,4 +1,4 @@
-CC=gcc -std=gnu11
+CC=gcc -std=gnu11 -Wall
 LDFLAGS=-lgit2
 CFLAGS=-g
 
