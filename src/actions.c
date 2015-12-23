@@ -326,6 +326,10 @@ int sysgeep_restore(char * file_path, int sflag)
   else if S_ISDIR(modes) // if directory, make it when absent
   {
     //TODO
+  mode_t old_mask = umask(0);
+  chk( mkdir(dir_path, ),
+      "Error: could not create directory %s\n", dir_path );
+  umask(old_mask);
   }
 
   // set permissions
