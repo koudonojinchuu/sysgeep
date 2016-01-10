@@ -87,6 +87,25 @@ static char * get_sysgeep_index(char * git_repo_path)
   return sysgeep_index_path;
 }
 
+static char * get_git_repo(int sflag)
+{
+  char * git_repo = NULL;
+  size_t n = 0;
+  FILE * config_file_fd = config_file(sflag, 'r');
+  getline(&git_repo, &n, config_file_fd);   
+  fclose(config_file_fd);
+  return git_repo;
+}
+
+int sysgeep_print_setup(int sflag)
+{
+  char * git_repo = get_git_repo(sflag);
+  chk(!git_repo || !strcmp(git_repo, ""), "Error: the sysgeep repository is not yet set. Use 'sysgeep [-s] setup <repo path>'.\n");
+  printf("sysgeep repository path: %s\n", git_repo);
+  free(git_repo);
+  return 0;
+}
+
 int sysgeep_setup(char * local_git_repo_path, int sflag)
 {
   // check if local_git_repo_path is a git repo
@@ -108,16 +127,6 @@ int sysgeep_setup(char * local_git_repo_path, int sflag)
 
   fclose(config_file_fd);
   return 0;
-}
-
-static char * get_git_repo(int sflag)
-{
-  char * git_repo = NULL;
-  size_t n = 0;
-  FILE * config_file_fd = config_file(sflag, 'r');
-  getline(&git_repo, &n, config_file_fd);   
-  fclose(config_file_fd);
-  return git_repo;
 }
 
 // add file or directory to the sysgeep index

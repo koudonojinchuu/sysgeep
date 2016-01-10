@@ -61,12 +61,9 @@ int main(int argc, char ** argv)
   if (!strcmp("setup", argv[optind]))
   {
     if (remaining_args < 2)
-    {
-      fprintf(stderr, "Error: one more argument is required.\n");
-      usage();
-      return 1;
-    }
-    return sysgeep_setup(argv[optind + 1], sflag);
+      return sysgeep_print_setup(sflag);
+    else
+      return sysgeep_setup(argv[optind + 1], sflag);
   }
   else if (!strcmp("save", argv[optind]))
   {
