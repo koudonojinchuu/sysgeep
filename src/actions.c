@@ -29,10 +29,12 @@ static FILE * config_file(int sflag, char rw)
 {
   char * config_file_path;
   struct stat s;
+  int need_to_free_path = 1;
 
   if (sflag)
   {
     config_file_path = ROOT_CONFIG_LOCATION;
+    need_to_free_path = 0;
   }
   else
   {
@@ -64,7 +66,9 @@ static FILE * config_file(int sflag, char rw)
   switch (rw)
   {
     case 'r' :
-      chk( access(config_file_path, R_OK), "Error: cannot read in %s\n", config_file_path );
+      chk( access(config_file_path, R_OK),
+        "Error: cannot read in %s\nMaybe you want to create it with (with root permissions): sysgeep -s setup <path/to/sysgeep/repo>\n",
+          config_file_path );
       config_file_path_fd = fopen(config_file_path, "r");
       break;
     case 'w' :
@@ -76,7 +80,7 @@ static FILE * config_file(int sflag, char rw)
     default :
       abort();
   }
-  free(config_file_path);
+  if (need_to_free_path) free(config_file_path);
   return config_file_path_fd;
 }
 
