@@ -16,6 +16,7 @@ static void usage(void)
       "Usage:\n"
       "\tsysgeep help\n"
       "\tsysgeep -h\n"
+      "\tsysgeep [-s] setup    # <- this will print your current setup\n"
       "\tsysgeep [-s] setup <path-to-local-git-repository>\n"
       "\tsysgeep [-s] save <path-to-file>\n"
       "\tsysgeep [-s] restore <path-to-file>\n");
