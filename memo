@@ -39,12 +39,5 @@ So we choose O(log(T)*H) over O(N*H), so the "index file" is a better choice.
 Prior art
 ---------
 
-To fill some voids in my understanding of git internals, I started reading Scott Chacon's "Git Internals". By doing this,
-I've discovered that Gibak does the same, too late. But I decided not to look at it, so that I can keep a chance to have original ideas, at least until the very first release.
-
-
-
- very first release.
-
-
-
+There exists a project called "Gibak". This is slightly different.
+Sysgeep is simpler, and its typical use case is also narrower than Gibak.
