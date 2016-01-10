@@ -1,9 +1,9 @@
 #include <stdlib.h> // getenv(), abort(), realpath()
 #include <stdio.h>  // fprintf()
 #include <string.h> // strlen()
-#include <sys/stat.h>// stat(), S_ISREG()
+#include <sys/stat.h>// stat(), S_ISREG(), chmod()
 #include <error.h>  // error()
-#include <unistd.h> // access()
+#include <unistd.h> // access(), chown()
 #include <libgen.h> // dirname(), basename()
 #include <git2.h>   // use git without system() calls
 #include <fcntl.h>  // O_RDONLY, O_WRONLY, O_CREAT
@@ -171,6 +171,17 @@ static void recurs_make_dirs_and_add_to_index(char * dir_path, char * git_repo_p
   add_to_index(git_repo_path, dir_path + strlen(git_repo_path));
 }
 
+// create or update the file copied from "src_path" to "dest_path" in the git repo
+static void copy_file(char * src_path, char * dest_path)
+{
+  FILE * file_to_write = fopen(dest_path, "w+");
+  FILE * src = fopen(src_path, "r");
+  char c;
+  while( (c = fgetc(src)) != EOF ) fputc(c, file_to_write); 
+  fclose(src);
+  fclose(file_to_write);
+}
+
 // save a given system file or dir into the sysgeep repo
 int sysgeep_save(char * file_path, int sflag)
 {
@@ -198,12 +209,7 @@ int sysgeep_save(char * file_path, int sflag)
   free(arg_dirname);
 
   // create or update the file copied from "file_path" in the git repo
-  FILE * file_to_write = fopen(in_git_path, "w+");
-  FILE * src = fopen(file_path, "r");
-  char c;
-  while( (c = fgetc(src)) != EOF ) fputc(c, file_to_write); 
-  fclose(src);
-  fclose(file_to_write);
+  copy_file(file_path, in_git_path);
 
   // take note of the permissions and owner:group
   // keep them on a line in a lexicographic ordered file at root of the git repo
@@ -283,6 +289,15 @@ int sysgeep_save(char * file_path, int sflag)
   return 0;
 }
 
+// take an absolute pathname and transform it to the corresponding absolute
+// pathname of the file in sysgeep repository
+static char * path_from_sysgeep_of(char * abs_path, char * git_repo_path)
+{
+  char * in_git_path = malloc(sizeof(char)*(strlen(abs_path) + strlen(git_repo_path) + 1));
+  sprintf(in_git_path, "%s%s", git_repo_path, abs_path);
+  return in_git_path;
+}
+
 // restore a file, copying it from the sysgeep repo to the host system
 // the argument is the path in the system, not the one in the sysgeep repo
 int sysgeep_restore(char * file_path, int sflag)
@@ -294,8 +309,7 @@ int sysgeep_restore(char * file_path, int sflag)
   pchk_t( abs_path, "Error: could not find the real path of: %s\n", file_path );
 
   // make it a path inside the git repo
-  char * in_git_path = malloc(sizeof(char)*(strlen(abs_path) + strlen(git_repo_path) + 1));
-  sprintf(in_git_path, "%s%s", git_repo_path, abs_path);
+  char * in_git_path = path_from_sysgeep_of(abs_path, git_repo_path);
 
   // if it is not in sysgeep_index, error.
   char * sysgeep_index_path = get_sysgeep_index(git_repo_path);
@@ -310,8 +324,9 @@ int sysgeep_restore(char * file_path, int sflag)
   int modes = strtol(endptr, &endptr, 8);
   free(attributes);
 
+  struct stat s;
   // check whether it is a directory according to .sysgeep_index infos
-  if S_ISREG(modes) // if regular file, copy
+  if (S_ISREG(modes)) // if regular file, copy
   {
     // cp from inside the git repo to the absolute path on the system
     int in_fd = open(in_git_path, O_RDONLY);
@@ -323,20 +338,27 @@ int sysgeep_restore(char * file_path, int sflag)
     while ( ( result = read(in_fd, &buf[0], sizeof(buf)) ) )
       assert(write(out_fd, &buf[0], result) == result);
   }
-  else if S_ISDIR(modes) // if directory, make it when absent
+  else if (S_ISDIR(modes) && stat(file_path, &s)) // if directory, make it when absent
   {
-    //TODO
-  mode_t old_mask = umask(0);
-  chk( mkdir(dir_path, ),
-      "Error: could not create directory %s\n", dir_path );
-  umask(old_mask);
+    mode_t old_mask = umask(0);
+    chk( mkdir(file_path, modes), "Error: could not create directory %s\n", file_path );
+    umask(old_mask);
+  }
+  else if (stat(file_path, &s)) // if not a directory but file is absent, just copy it (permissions will be set anyway)
+  {
+    copy_file(in_git_path, file_path);
   }
 
-  // set permissions
-  //TODO
-  printf("Found file: permissions: %o\n", modes);
+  //TODO: system to only set attributes when they actually differ
+  //      (and be able to choose to touch the file anyway)
+  // set permissions, owner and group
+  chk( chmod(file_path, modes), "Error: could not set permissions of: %s\n", file_path );
+  chk( chown(file_path, user, group), "Error: could not set owner or group of: %s\n", file_path );
+
+  //printf("Found file: permissions: %o\n", modes);
 
   free(abs_path);
+  free(in_git_path);
 
   return 0;
 }
