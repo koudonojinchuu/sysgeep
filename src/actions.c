@@ -385,6 +385,12 @@ int sysgeep_setup_remote_for_repo(char * remote_repo_url, char * local_git_repo_
   chk( git_remote_create(&newremote, repo, "sysgeep_origin", remote_repo_url),
     "Error: could not add remote %s to sysgeep repository\n", remote_repo_url );
   git_remote_free(newremote);
+  git_reference * master_branch = NULL;
+  chk( git_reference_dwim(&master_branch, repo, "master"),
+    "Error: could not retrieve master branch for the sysgeep repository\n" );
+  chk( git_branch_set_upstream(master_branch, "sysgeep_origin"),
+    "Error: could not set the remote sysgeep_origin as upstream for master branch\n" );
+  git_reference_free(master_branch);
   git_repository_free(repo);
   return 0;
 }
