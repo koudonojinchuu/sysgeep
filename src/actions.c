@@ -191,6 +191,7 @@ static void copy_file(char * src_path, char * dest_path)
   FILE * src = fopen(src_path, "r");
   char c;
   while( (c = fgetc(src)) != EOF ) fputc(c, file_to_write); 
+  // TODO!!! : put EOF and truncate the file just after
   fclose(src);
   fclose(file_to_write);
 }
@@ -373,5 +374,31 @@ int sysgeep_restore(char * file_path, int sflag)
   free(abs_path);
   free(in_git_path);
 
+  return 0;
+}
+
+int sysgeep_setup_remote(char * remote_repo_url, int sflag)
+{
+  char * sysgeep_repo = get_git_repo(sflag); 
+  sysgeep_setup_remote_for_repo(remote_repo_url, sysgeep_repo, sflag);
+  free(sysgeep_repo);
+  return 0;
+}
+
+int sysgeep_setup_remote_for_repo(char * remote_repo_url, char * local_git_repo_path, int sflag);
+{
+  fprintf(stderr, "Not yet implemented.\n");
+  return 0;
+{
+
+int sysgeep_push(int sflag)
+{
+  fprintf(stderr, "Not yet implemented.\n");
+  return 0;
+}
+
+int sysgeep_push(int sflag)
+{
+  fprintf(stderr, "Not yet implemented.\n");
   return 0;
 }

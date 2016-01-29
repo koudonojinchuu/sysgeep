@@ -18,6 +18,8 @@ static void usage(void)
       "\tsysgeep -h\n"
       "\tsysgeep [-s] setup    # <- this will print your current setup\n"
       "\tsysgeep [-s] setup <path-to-local-git-repository>\n"
+      "\tsysgeep [-s] setup-remote <remote-git-repo>\n"
+      "\tsysgeep [-s] setup-remote <remote-git-repo> <path-to-local-git-repository>\n"
       "\tsysgeep [-s] save <path-to-file>\n"
       "\tsysgeep [-s] restore <path-to-file>\n");
 }
@@ -65,6 +67,19 @@ int main(int argc, char ** argv)
       return sysgeep_print_setup(sflag);
     else
       return sysgeep_setup(argv[optind + 1], sflag);
+  }
+  else if (!strcmp("setup-remote", argv[optind]))
+  {
+    if (remaining_args == 2)
+      return sysgeep_setup_remote(argv[optind + 1], sflag);
+    else if (remaining_args == 3)
+      return sysgeep_setup_remote_for_repo(argv[optind + 1], argv[optind + 2], sflag);
+    else
+    {
+      fprintf(stderr, "Error: wrong number of arguments.\n");
+      usage();
+      return 1;
+    }
   }
   else if (!strcmp("save", argv[optind]))
   {
