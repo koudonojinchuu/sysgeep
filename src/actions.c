@@ -386,7 +386,14 @@ int sysgeep_setup_remote(char * remote_repo_url, int sflag)
 
 int sysgeep_setup_remote_for_repo(char * remote_repo_url, char * local_git_repo_path, int sflag);
 {
-  fprintf(stderr, "Not yet implemented.\n");
+  git_repository * repo = NULL;
+  chk( git_repository_open(&repo, git_repo_path), "Error: could not open git repository: %s\n", git_repo_path );
+  git_remote_delete(repo, "sysgeep_origin");
+  git_remote * newremote = NULL;
+  chk( git_remote_create(&newremote, repo, "sysgeep_origin", remote_repo_url),
+    "Error: could not add remote %s to sysgeep repository\n", remote_repo_url );
+  git_remote_free(repo);
+  git_repository_free(repo);
   return 0;
 {
 
