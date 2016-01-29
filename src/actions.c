@@ -187,11 +187,10 @@ static void recurs_make_dirs_and_add_to_index(char * dir_path, char * git_repo_p
 // create or update the file copied from "src_path" to "dest_path" in the git repo
 static void copy_file(char * src_path, char * dest_path)
 {
-  FILE * file_to_write = fopen(dest_path, "w+");
+  FILE * file_to_write = fopen(dest_path, "w");
   FILE * src = fopen(src_path, "r");
   char c;
   while( (c = fgetc(src)) != EOF ) fputc(c, file_to_write); 
-  // TODO!!! : put EOF and truncate the file just after
   fclose(src);
   fclose(file_to_write);
 }
