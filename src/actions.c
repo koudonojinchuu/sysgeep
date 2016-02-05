@@ -17,6 +17,8 @@
 #define USER_CONFIG_DIR ".config/sysgeep/"
 #define USER_CONFIG_LOCATION USER_CONFIG_DIR USER_CONFIG_FILE
 #define ROOT_CONFIG_LOCATION "/etc/sysgeep.conf"
+//#define ORIGIN "sysgeep_origin"
+#define ORIGIN "origin"
 
 // uid_t and gid_t are 32bits uint, so their max is 10 digits
 #define UIDT_MAXLEN 10
@@ -376,20 +378,54 @@ int sysgeep_restore(char * file_path, int sflag)
   return 0;
 }
 
+static int cred_acquire_cb( git_cred **out,
+                            const char * url                __attribute__((unused)),
+                            const char * username_from_url  __attribute__((unused)),
+                            unsigned int allowed_types      __attribute__((unused)),
+                            void * payload                  __attribute__((unused)) )
+{
+	char username[128] = {0};
+	char password[128] = {0};
+
+	printf("Username: ");
+	scanf("%s", username);
+
+	/* Yup. Right there on your terminal. Careful where you copy/paste output. */
+	printf("Password: ");
+	scanf("%s", password);
+
+	return git_cred_userpass_plaintext_new(out, username, password);
+}
+
 int sysgeep_setup_remote_for_repo(char * remote_repo_url, char * local_git_repo_path, int sflag)
 {
   git_repository * repo = NULL;
   chk( git_repository_open(&repo, local_git_repo_path), "Error: could not open git repository: %s\n", local_git_repo_path );
-  git_remote_delete(repo, "sysgeep_origin");
+  git_remote_delete(repo, ORIGIN);
   git_remote * newremote = NULL;
-  chk( git_remote_create(&newremote, repo, "sysgeep_origin", remote_repo_url),
+  chk( git_remote_create(&newremote, repo, ORIGIN, remote_repo_url),
     "Error: could not add remote %s to sysgeep repository\n", remote_repo_url );
+  //git_remote_callbacks callbacks = GIT_REMOTE_CALLBACKS_INIT;
+  git_fetch_options fetch_opts = GIT_FETCH_OPTIONS_INIT;
+  //fetch_opts.callbacks.progress = progress_cb;
+  fetch_opts.callbacks.credentials = cred_acquire_cb;
+  //fetch_opts.callbacks.payload = &d;
+  //
+  //chk( git_remote_fetch(newremote, NULL, NULL, NULL),
+  //  "Error: could not fetch the remote\n" );
+  int error;
+  error = git_remote_fetch(newremote, NULL, &fetch_opts, NULL);
+  git_error *e = giterr_last();
+  printf("Error %d/%d: %s\n", error, e->klass, e->message);
   git_remote_free(newremote);
   git_reference * master_branch = NULL;
   chk( git_reference_dwim(&master_branch, repo, "master"),
     "Error: could not retrieve master branch for the sysgeep repository\n" );
-  chk( git_branch_set_upstream(master_branch, "sysgeep_origin"),
-    "Error: could not set the remote sysgeep_origin as upstream for master branch\n" );
+  //chk( git_branch_set_upstream(master_branch, ORIGIN),
+  //  "Error: could not set the remote %s as upstream for master branch\n", ORIGIN );
+  error = git_branch_set_upstream(master_branch, ORIGIN);
+  e = giterr_last();
+  printf("Error %d/%d: %s\n", error, e->klass, e->message);
   git_reference_free(master_branch);
   git_repository_free(repo);
   return 0;
