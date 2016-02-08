@@ -380,21 +380,23 @@ int sysgeep_restore(char * file_path, int sflag)
 
 static int cred_acquire_cb( git_cred **out,
                             const char * url                __attribute__((unused)),
-                            const char * username_from_url  __attribute__((unused)),
+                            //const char * username_from_url  __attribute__((unused)),
+                            const char * username_from_url,
                             unsigned int allowed_types      __attribute__((unused)),
                             void * payload                  __attribute__((unused)) )
 {
-	char username[128] = {0};
-	char password[128] = {0};
+	//char username[128] = {0};
+	//char password[128] = {0};
 
-	printf("Username: ");
-	scanf("%s", username);
+	//printf("Username: ");
+	//scanf("%s", username);
 
-	/* Yup. Right there on your terminal. Careful where you copy/paste output. */
-	printf("Password: ");
-	scanf("%s", password);
+	///* Yup. Right there on your terminal. Careful where you copy/paste output. */
+	//printf("Password: ");
+	//scanf("%s", password);
 
-	return git_cred_userpass_plaintext_new(out, username, password);
+	//return git_cred_userpass_plaintext_new(out, username, password);
+  return git_cred_ssh_key_from_agent(out, username_from_url);
 }
 
 int sysgeep_setup_remote_for_repo(char * remote_repo_url, char * local_git_repo_path, int sflag)
@@ -415,8 +417,13 @@ int sysgeep_setup_remote_for_repo(char * remote_repo_url, char * local_git_repo_
   //  "Error: could not fetch the remote\n" );
   int error;
   error = git_remote_fetch(newremote, NULL, &fetch_opts, NULL);
-  git_error *e = giterr_last();
+  git_error * e;
+  if (error)
+  {
+  e = giterr_last();
   printf("Error %d/%d: %s\n", error, e->klass, e->message);
+  printf("Unless otherwise stated, success to fetch\n");
+  }
   git_remote_free(newremote);
   git_reference * master_branch = NULL;
   chk( git_reference_dwim(&master_branch, repo, "master"),
@@ -424,8 +431,11 @@ int sysgeep_setup_remote_for_repo(char * remote_repo_url, char * local_git_repo_
   //chk( git_branch_set_upstream(master_branch, ORIGIN),
   //  "Error: could not set the remote %s as upstream for master branch\n", ORIGIN );
   error = git_branch_set_upstream(master_branch, ORIGIN);
+  if (error)
+  {
   e = giterr_last();
   printf("Error %d/%d: %s\n", error, e->klass, e->message);
+  }
   git_reference_free(master_branch);
   git_repository_free(repo);
   return 0;
